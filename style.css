@@ -1,0 +1,230 @@
+/* ============================================================
+   样式变量集中区（改这里就能换全站配色/圆角，方便自己调）
+   ============================================================ */
+:root {
+  --bg: #faf8f5;            /* 页面暖白底 */
+  --card-bg: #ffffff;       /* 卡片白底 */
+  --text: #222222;          /* 主文字 */
+  --text-soft: #666666;     /* 次要文字 */
+  --accent-red: #ff6b5e;    /* 强调红（做题/红色入口） */
+  --accent-blue: #4c8bf5;   /* 入口蓝 */
+  --accent-green: #2ecc71;  /* 在线绿 */
+  --radius: 18px;           /* 大圆角 */
+  --radius-sm: 12px;        /* 小圆角 */
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.06); /* 轻阴影 */
+  --nav-bg: rgba(255, 255, 255, 0.8);        /* 胶囊导航半透明 */
+}
+
+/* ============================================================
+   基础布局
+   ============================================================ */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* 背景光斑：两个模糊彩色圆，纯装饰 */
+.blob {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.5;
+  z-index: 0;
+  pointer-events: none;
+}
+.blob-a { width: 320px; height: 320px; background: #ffd6cf; top: -80px; right: -60px; }
+.blob-b { width: 280px; height: 280px; background: #d6e4ff; bottom: -60px; left: -40px; }
+
+/* 顶部胶囊导航 */
+.pill-nav {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin: 22px auto 0;
+  width: fit-content;
+  padding: 6px;
+  background: var(--nav-bg);
+  backdrop-filter: blur(10px);
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+}
+.pill-nav a {
+  text-decoration: none;
+  color: var(--text-soft);
+  font-size: 14px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  transition: all 0.2s;
+}
+.pill-nav a:hover { color: var(--text); }
+.pill-nav a.active { background: #fff; color: var(--text); box-shadow: var(--shadow); }
+
+/* 主容器 */
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 40px 20px 80px;
+}
+
+/* 顶部标题区 */
+.hero { text-align: center; margin-bottom: 36px; }
+.hero h1 { font-size: 30px; font-weight: 700; }
+.heart { font-size: 22px; }
+.subtitle { color: var(--text-soft); margin-top: 8px; font-size: 15px; }
+.badge-online {
+  display: inline-block;
+  margin-top: 14px;
+  background: rgba(46, 204, 113, 0.12);
+  color: var(--accent-green);
+  font-size: 13px;
+  padding: 4px 14px;
+  border-radius: 999px;
+}
+
+/* 首页四个数字卡片 */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.stat-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 22px;
+  text-align: center;
+}
+.stat-num { font-size: 32px; font-weight: 700; color: var(--accent-red); }
+.stat-label { color: var(--text-soft); font-size: 13px; margin-top: 6px; }
+
+/* 两个入口卡片 */
+.entry-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+.entry-card {
+  display: block;
+  text-decoration: none;
+  color: var(--text);
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  border-top: 4px solid transparent;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.entry-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.1); }
+.entry-blue { border-top-color: var(--accent-blue); }
+.entry-red { border-top-color: var(--accent-red); }
+.entry-icon { font-size: 32px; }
+.entry-title { font-size: 18px; font-weight: 700; margin: 10px 0 6px; }
+.entry-desc { color: var(--text-soft); font-size: 13px; line-height: 1.6; }
+.entry-btn { margin-top: 14px; font-size: 14px; font-weight: 600; color: var(--accent-blue); }
+
+/* 占位卡片（学习/复习页用） */
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 28px;
+}
+.placeholder-card p { font-size: 15px; line-height: 1.8; }
+.muted { color: var(--text-soft); margin-top: 8px; }
+
+/* 手机适配 */
+@media (max-width: 560px) {
+  .stat-grid, .entry-grid { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 26px; }
+}
+
+/* ============================================================
+   新词学习页（study.html）—— 答题卡片
+   要改外观就动下面这些，配色都来自上面 :root 变量
+   ============================================================ */
+.quiz-card, .result-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 32px;
+  text-align: center;
+}
+.progress {
+  color: var(--text-soft);
+  font-size: 14px;
+  margin-bottom: 18px;
+}
+.word-display {
+  font-size: 44px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.phonetic {
+  color: var(--text-soft);
+  font-size: 16px;
+  margin: 8px 0 26px;
+}
+.options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.option-btn {
+  font-family: inherit;
+  font-size: 16px;
+  color: var(--text);
+  background: var(--bg);
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 16px 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.option-btn:hover:not(:disabled) { border-color: var(--accent-blue); }
+.option-btn:disabled { cursor: default; }
+.option-btn.right { background: rgba(46, 204, 113, 0.15); border-color: var(--accent-green); color: #1e9e57; }
+.option-btn.wrong { background: rgba(255, 107, 94, 0.12); border-color: var(--accent-red); color: #d6453a; }
+
+.feedback {
+  min-height: 22px;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+.feedback.ok { color: var(--accent-green); }
+.feedback.no { color: var(--accent-red); }
+
+.next-btn {
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent-blue);
+  border: none;
+  border-radius: 999px;
+  padding: 12px 28px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.next-btn:hover { opacity: 0.9; }
+
+.result-card h2 { font-size: 24px; margin-bottom: 12px; }
+.result-card p { color: var(--text-soft); font-size: 16px; line-height: 1.8; }
+.result-card .next-btn { margin-top: 18px; }
+
+@media (max-width: 560px) {
+  .options { grid-template-columns: 1fr; }
+  .word-display { font-size: 36px; }
+}

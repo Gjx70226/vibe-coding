@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>四级备考助手 · 风格预览</title>
+<style>
+  /* ===== 颜色与基础变量 ===== */
+  :root {
+    --bg: #faf8f5;            /* 暖白底 */
+    --card: #ffffff;          /* 卡片白 */
+    --ink: #2b2b2b;           /* 主文字 */
+    --sub: #8a8580;           /* 次要文字 */
+    --accent: #ff6b5e;        /* 主红（做题/强调） */
+    --accent2: #4c8bf5;       /* 蓝（入口） */
+    --green: #2ecc71;         /* 在线绿 */
+    --radius: 18px;           /* 大圆角 */
+    --shadow: 0 8px 24px rgba(0,0,0,.06); /* 轻阴影 */
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+  /* ===== 背景光斑（彩色模糊圆） ===== */
+  body::before, body::after {
+    content: "";
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: .55;
+    z-index: 0;
+  }
+  body::before { width: 360px; height: 360px; background: #ffd6cf; top: -80px; right: -60px; }
+  body::after  { width: 320px; height: 320px; background: #cfe0ff; bottom: -80px; left: -60px; }
+
+  /* ===== 顶部胶囊导航 ===== */
+  .nav {
+    position: sticky; top: 16px; z-index: 10;
+    margin: 16px auto 0; width: fit-content;
+    display: flex; gap: 4px; padding: 8px 10px;
+    background: rgba(255,255,255,.7);
+    backdrop-filter: blur(12px);
+    border-radius: 999px;
+    box-shadow: var(--shadow);
+  }
+  .nav a {
+    text-decoration: none; color: var(--sub);
+    padding: 8px 16px; border-radius: 999px; font-size: 14px;
+    transition: .2s;
+  }
+  .nav a.active, .nav a:hover { background: var(--accent); color: #fff; }
+
+  /* ===== 页面内容 ===== */
+  .wrap { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; padding: 40px 20px 60px; }
+  .hero { text-align: center; margin-bottom: 28px; }
+  .hero h1 { font-size: 30px; font-weight: 800; }
+  .hero p { color: var(--sub); margin-top: 8px; }
+  .online {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-top: 14px; padding: 6px 14px; border-radius: 999px;
+    background: #e9f9f0; color: #1e9e54; font-size: 13px; font-weight: 600;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+
+  /* ===== 四个数字卡片 ===== */
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 30px; }
+  .stat {
+    background: var(--card); border-radius: var(--radius);
+    padding: 22px; box-shadow: var(--shadow);
+  }
+  .stat .num { font-size: 32px; font-weight: 800; }
+  .stat .label { color: var(--sub); font-size: 14px; margin-top: 4px; }
+  .stat .tag {
+    display: inline-block; margin-top: 8px; font-size: 12px;
+    background: #fff0ee; color: var(--accent); padding: 2px 8px; border-radius: 999px;
+  }
+
+  /* ===== 两个入口 ===== */
+  .entries { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .entry {
+    background: var(--card); border-radius: var(--radius);
+    padding: 26px; box-shadow: var(--shadow); cursor: pointer;
+    transition: .2s; text-align: center;
+  }
+  .entry:hover { transform: translateY(-3px); }
+  .entry .big { font-size: 40px; }
+  .entry h3 { margin: 10px 0 6px; }
+  .entry p { color: var(--sub); font-size: 13px; }
+  .entry.btn-blue { border-top: 3px solid var(--accent2); }
+  .entry.btn-red  { border-top: 3px solid var(--accent); }
+
+  @media (max-width: 560px) {
+    .stats, .entries { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <!-- 顶部胶囊导航 -->
+  <nav class="nav">
+    <a href="#" class="active">首页</a>
+    <a href="#">新词学习</a>
+    <a href="#">错题复习</a>
+  </nav>
+
+  <div class="wrap">
+    <div class="hero">
+      <h1>四级备考助手 ❤️</h1>
+      <p>核心高频词 · 选择题背词 · 错题复习</p>
+      <div class="online"><span class="dot"></span>1926 人正在学习</div>
+    </div>
+
+    <!-- 四个数字卡片 -->
+    <div class="stats">
+      <div class="stat">
+        <div class="num">12</div>
+        <div class="label">今日新学数量</div>
+        <span class="tag">每日 0 点清零</span>
+      </div>
+      <div class="stat">
+        <div class="num">5</div>
+        <div class="label">待复习错题数量</div>
+        <span class="tag">小红标提醒</span>
+      </div>
+      <div class="stat">
+        <div class="num">86</div>
+        <div class="label">累计学习单词</div>
+      </div>
+      <div class="stat">
+        <div class="num">78%</div>
+        <div class="label">答题正确率</div>
+      </div>
+    </div>
+
+    <!-- 两个入口 -->
+    <div class="entries">
+      <div class="entry btn-red">
+        <div class="big">📚</div>
+        <h3>新词学习</h3>
+        <p>选择题背词，答错进错题本</p>
+      </div>
+      <div class="entry btn-blue">
+        <div class="big">🔁</div>
+        <h3>错题复习</h3>
+        <p>重做错题，答对移除待复习</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

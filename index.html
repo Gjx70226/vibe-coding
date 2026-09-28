@@ -3,19 +3,67 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>我的 Vibe Coding 项目</title>
-  <style>
-    body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; max-width: 640px; margin: 80px auto; padding: 0 20px; color: #222; }
-    h1 { font-size: 28px; }
-    p { line-height: 1.8; color: #555; }
-    code { background: #f3f3f3; padding: 1px 6px; border-radius: 4px; }
-    .tag { display: inline-block; background: #eef; color: #335; padding: 2px 10px; border-radius: 12px; font-size: 13px; }
-  </style>
+  <title>四级备考助手</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>我的 Vibe Coding 项目 🧭</h1>
-  <p><span class="tag">Day 2 占位页</span></p>
-  <p>这是项目的第一个网页，今天先占个位置。真正的网站功能（MVP）会在 Day 7 才开始做。</p>
-  <p>它由 <code>index.html</code> 这个文件构成——浏览器打开网站时读的第一个页面就是它。</p>
+  <!-- 背景光斑：纯装饰，让白底不单调 -->
+  <div class="blob blob-a"></div>
+  <div class="blob blob-b"></div>
+
+  <!-- 顶部胶囊导航：三个页面互相跳 -->
+  <nav class="pill-nav">
+    <a href="index.html" data-page="index">首页</a>
+    <a href="study.html" data-page="study">新词学习</a>
+    <a href="review.html" data-page="review">错题复习</a>
+  </nav>
+
+  <main class="container">
+    <header class="hero">
+      <h1>四级备考助手 <span class="heart">❤️</span></h1>
+      <p class="subtitle">记单词 · 自测 · 巩固生词</p>
+      <span class="badge-online">1926 人正在学习</span>
+    </header>
+
+    <!-- 首页四个数字卡片（占位值，后续接 localStorage） -->
+    <section class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-today">0</div>
+        <div class="stat-label">今日新学</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-review">0</div>
+        <div class="stat-label">待复习错题</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-total">0</div>
+        <div class="stat-label">累计学习单词</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-acc">0%</div>
+        <div class="stat-label">答题正确率</div>
+      </div>
+    </section>
+
+    <!-- 两个入口卡片 -->
+    <section class="entry-grid">
+      <a class="entry-card entry-blue" href="study.html">
+        <div class="entry-icon">📚</div>
+        <div class="entry-title">新词学习</div>
+        <div class="entry-desc">选择题背词，答错自动进错题本</div>
+        <div class="entry-btn">开始学习 →</div>
+      </a>
+      <a class="entry-card entry-red" href="review.html">
+        <div class="entry-icon">🔁</div>
+        <div class="entry-title">错题复习</div>
+        <div class="entry-desc">重做待复习错题，答对即移除</div>
+        <div class="entry-btn">去复习 →</div>
+      </a>
+    </section>
+  </main>
+
+  <!-- 先引入词库（定义全局 WORDS），再引入脚本（顺序不能反） -->
+  <script src="words.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
