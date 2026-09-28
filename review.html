@@ -19,16 +19,24 @@
   <main class="container">
     <header class="hero">
       <h1>错题复习 <span class="heart">🔁</span></h1>
-      <p class="subtitle">重做待复习错题，答对即移除</p>
+      <p class="subtitle">看中文释义，选出正确英文单词；答对即移出待复习</p>
     </header>
 
-    <section class="card placeholder-card">
-      <p>本页复习功能尚未接入。</p>
-      <p class="muted">下一步将读取错题本、生成重做题目、答对后移除。</p>
+    <section class="quiz-card" id="quiz">
+      <div class="progress" id="progress"></div>
+      <div class="word-display" id="word"></div>
+      <div class="phonetic" id="phonetic"></div>
+      <div class="options" id="options"></div>
+      <div class="feedback" id="feedback"></div>
+      <button class="next-btn" id="nextBtn" style="display:none"></button>
     </section>
+
+    <section class="result-card" id="result" style="display:none"></section>
   </main>
 
+  <!-- 顺序：先词库 → 再存储层(app.js) → 再本页逻辑(review.js) -->
   <script src="words.js"></script>
   <script src="app.js"></script>
+  <script src="review.js"></script>
 </body>
 </html>
