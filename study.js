@@ -45,17 +45,29 @@
   }
 
   // 生成 4 个选项：正确释义 + 3 个干扰词释义，不够再用库里随机补
+  // 返回对象数组：{ meaning 中文释义, word 英文词 }，便于显示词性
   function buildOptions(target) {
-    var opts = [target.meaning];
+    var opts = [{ meaning: target.meaning, word: target.word }];
     target.neighbors.forEach(function (n) {
-      var m = meaningOf(n);
-      if (m && opts.indexOf(m) === -1) opts.push(m);
+      var w = wordMap[n];
+      if (w && !opts.some(function (o) { return o.meaning === w.meaning; })) {
+        opts.push({ meaning: w.meaning, word: w.word });
+      }
     });
     while (opts.length < 4) {
-      var r = WORDS[Math.floor(Math.random() * WORDS.length)].meaning;
-      if (opts.indexOf(r) === -1) opts.push(r);
+      var rw = WORDS[Math.floor(Math.random() * WORDS.length)];
+      if (!opts.some(function (o) { return o.meaning === rw.meaning; })) {
+        opts.push({ meaning: rw.meaning, word: rw.word });
+      }
     }
     return shuffle(opts);
+  }
+
+  // 词性小徽章（动词V/名词N/形容词A/副词ADV），词库未识别则不显示
+  function posBadge(word) {
+    var p = wordMap[word] && wordMap[word].pos;
+    if (!p) return "";
+    return '<span class="pos-tag ' + p + '">' + p + "</span>";
   }
 
   // 渲染当前这一题
@@ -71,11 +83,11 @@
     optionsEl.innerHTML = "";
 
     var opts = buildOptions(t);
-    opts.forEach(function (text) {
+    opts.forEach(function (o) {
       var b = document.createElement("button");
       b.className = "option-btn";
-      b.textContent = text;
-      b.onclick = function () { choose(text, t, opts); };
+      b.innerHTML = posBadge(o.word) + o.meaning;
+      b.onclick = function () { choose(o, t, opts); };
       optionsEl.appendChild(b);
     });
   }
@@ -85,15 +97,15 @@
     if (answered) return;
     answered = true;
 
-    var correct = chosen === target.meaning;
+    var correct = chosen.meaning === target.meaning;
     if (correct) correctCount++;
 
     // 把四个按钮都标出来：对的绿色，选错的红色
     var buttons = optionsEl.querySelectorAll(".option-btn");
     buttons.forEach(function (b, i) {
       b.disabled = true;
-      if (opts[i] === target.meaning) b.classList.add("right");
-      else if (b.textContent === chosen) b.classList.add("wrong");
+      if (opts[i].meaning === target.meaning) b.classList.add("right");
+      else if (opts[i].meaning === chosen.meaning) b.classList.add("wrong");
     });
 
     feedbackEl.textContent = correct ? "✓ 答对了" : "✗ 正确答案：" + target.meaning;

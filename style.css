@@ -229,3 +229,21 @@ body {
   .options { grid-template-columns: 1fr; }
   .word-display { font-size: 36px; }
 }
+
+/* 选项前的词性小徽章：动词V/名词N/形容词A/副词ADV */
+.pos-tag {
+  display: inline-block;
+  min-width: 20px;
+  margin-right: 8px;
+  padding: 2px 7px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+  vertical-align: middle;
+}
+.pos-tag.V   { background: #e8f0fe; color: var(--accent-blue); }
+.pos-tag.N   { background: #e7f6ee; color: var(--accent-green); }
+.pos-tag.A   { background: #fff1e6; color: #d9801a; }
+.pos-tag.ADV { background: #f0e9fb; color: #7a4fd1; }

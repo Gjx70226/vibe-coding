@@ -63,6 +63,13 @@
       "<a class='next-btn' href='index.html' style='text-decoration:none;display:inline-block;margin-top:18px'>返回首页</a>";
   }
 
+  // 词性小徽章（动词V/名词N/形容词A/副词ADV），词库未识别则不显示
+  function posBadge(w) {
+    var p = wordMap[w] && wordMap[w].pos;
+    if (!p) return "";
+    return '<span class="pos-tag ' + p + '">' + p + "</span>";
+  }
+
   // 渲染当前这一题（题干=中文释义）
   function render() {
     answered = false;
@@ -77,11 +84,11 @@
     optionsEl.innerHTML = "";
 
     var opts = buildOptions(word);
-    opts.forEach(function (text) {
+    opts.forEach(function (w) {
       var b = document.createElement("button");
       b.className = "option-btn";
-      b.textContent = text;
-      b.onclick = function () { choose(text, word, opts); };
+      b.innerHTML = posBadge(w) + w;
+      b.onclick = function () { choose(w, word, opts); };
       optionsEl.appendChild(b);
     });
   }
