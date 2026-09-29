@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>修复后 · respond 题</title>
+<link rel="stylesheet" href="../style.css">
+<style>
+  .note { background:#eef6ff; border-left:4px solid #2563eb; padding:12px 16px; border-radius:12px; margin-bottom:18px; font-size:14px; color:#444; line-height:1.8;}
+  .note b { color:#2563eb; }
+  .tag-new { display:inline-block; background:#e7f6ee; color:#1e9e57; font-size:12px; padding:2px 8px; border-radius:6px; margin-bottom:10px;}
+</style>
+</head>
+<body>
+<div class="blob blob-a"></div><div class="blob blob-b"></div>
+<div class="container" style="max-width:560px">
+  <span class="tag-new">Day 10 修复后</span>
+  <div class="note">
+    同样这道题，每个选项<b>前面加了词性徽章</b>：respond 是 <b>V.</b>（动词）、response 是 <b>N.</b>（名词）。
+    现在 C「V. 回应；回答」和 D「N. 回应」一眼就能靠词性分开，撞车问题解决了；选项也改为左对齐、词性后加句点。
+  </div>
+  <div class="quiz-card">
+    <div class="progress">第 1 / 10 词</div>
+    <div class="word-display">respond</div>
+    <div class="phonetic">/rɪˈspɒnd/</div>
+    <div class="options" id="options"></div>
+    <div class="feedback no">✗ 正确答案：V. 回应；回答</div>
+  </div>
+</div>
+<script src="../words.js"></script>
+<script>
+  var wordMap = {};
+  WORDS.forEach(function (w) { wordMap[w.word] = w; });
+  var target = wordMap["respond"];
+  // 与 study.js 一致的 buildOptions：返回 {meaning, word} 对象
+  function buildOptions(t) {
+    var opts = [{ meaning: t.meaning, word: t.word }];
+    t.neighbors.forEach(function (n) {
+      var w = wordMap[n];
+      if (w && !opts.some(function (o) { return o.meaning === w.meaning; })) {
+        opts.push({ meaning: w.meaning, word: w.word });
+      }
+    });
+    while (opts.length < 4) {
+      var rw = WORDS[Math.floor(Math.random() * WORDS.length)];
+      if (!opts.some(function (o) { return o.meaning === rw.meaning; })) {
+        opts.push({ meaning: rw.meaning, word: rw.word });
+      }
+    }
+    return opts; // 保持稳定顺序，便于和修复前对照
+  }
+  // 词性小徽章（动词V/名词N/形容词A/副词ADV），未识别则不显示
+  function posBadge(word) {
+    var p = wordMap[word] && wordMap[word].pos;
+    if (!p) return "";
+    return '<span class="pos-tag ' + p + '">' + p + ".</span>";
+  }
+  var opts = buildOptions(target);
+  var box = document.getElementById("options");
+  opts.forEach(function (o) {
+    var b = document.createElement("button");
+    b.className = "option-btn";
+    b.innerHTML = posBadge(o.word) + o.meaning;
+    box.appendChild(b);
+  });
+</script>
+</body>
+</html>
