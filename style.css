@@ -6,9 +6,9 @@
   --card-bg: #ffffff;       /* 卡片白底 */
   --text: #222222;          /* 主文字 */
   --text-soft: #666666;     /* 次要文字 */
-  --accent-red: #ff6b5e;    /* 强调红（做题/红色入口） */
-  --accent-blue: #4c8bf5;   /* 入口蓝 */
-  --accent-green: #2ecc71;  /* 在线绿 */
+  --accent-red: #d6453a;    /* 强调红（加深，白底对比清晰，与错题红字统一） */
+  --accent-blue: #2563eb;   /* 入口蓝（加深，白底不再发灰） */
+  --accent-green: #1e9e57;  /* 在线绿（加深，浅底不再发飘，与对勾绿统一） */
   --radius: 18px;           /* 大圆角 */
   --radius-sm: 12px;        /* 小圆角 */
   --shadow: 0 8px 24px rgba(0, 0, 0, 0.06); /* 轻阴影 */
@@ -169,6 +169,7 @@ body {
   font-size: 44px;
   font-weight: 700;
   letter-spacing: 1px;
+  word-break: break-word;
 }
 .phonetic {
   color: var(--text-soft);
