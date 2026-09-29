@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>四级备考助手 · 主视图</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ===== 本页专用样式（配色全部走 :root 变量，方便你自己改） ===== */
+    /* 状态切换条（演示用，方便验收四种状态） */
+    .state-bar { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 16px auto 4px; }
+    .state-btn {
+      font-family: inherit; font-size: 13px;
+      padding: 6px 14px; border: 1px solid #ddd; background: #fff;
+      border-radius: 999px; cursor: pointer; color: var(--text-soft);
+      transition: all .15s;
+    }
+    .state-btn.active { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
+
+    /* 加载中转圈 */
+    .loader-box { text-align: center; padding: 64px 0; color: var(--text-soft); }
+    .spinner {
+      width: 36px; height: 36px; margin: 0 auto 14px;
+      border: 4px solid #eee; border-top-color: var(--accent-blue);
+      border-radius: 50%; animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* 空状态 / 错误状态 */
+    .empty-box, .error-box { text-align: center; padding: 48px 20px; color: var(--text-soft); }
+    .error-box { color: var(--accent-red); }
+    .error-box .retry-btn {
+      font-family: inherit; font-size: 14px; font-weight: 600; color: #fff;
+      background: var(--accent-red); border: none; border-radius: 999px;
+      padding: 10px 24px; cursor: pointer; margin-top: 14px;
+    }
+
+    /* 区块3：最近学习的词 列表 */
+    .section-title { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+    .word-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 2px; border-bottom: 1px solid #f0ece6;
+    }
+    .word-row:last-child { border-bottom: none; }
+    .word-idx { width: 22px; color: var(--text-soft); font-size: 14px; text-align: center; }
+    .word-main { flex: 1; }
+    .word-en { font-weight: 600; font-size: 16px; }
+    .word-zh { color: var(--text-soft); font-size: 13px; margin-top: 2px; }
+    .word-status { font-size: 12px; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+    .status-ok { background: rgba(46,204,113,.12); color: var(--accent-green); }
+    .status-wait { background: rgba(255,107,94,.12); color: var(--accent-red); }
+  </style>
+</head>
+<body>
+  <!-- 背景光斑：纯装饰 -->
+  <div class="blob blob-a"></div>
+  <div class="blob blob-b"></div>
+
+  <!-- 顶部胶囊导航（主视图也加进来，标 active） -->
+  <nav class="pill-nav">
+    <a href="index.html" data-page="index">首页</a>
+    <a href="study.html" data-page="study">新词学习</a>
+    <a href="review.html" data-page="review">错题复习</a>
+    <a href="dashboard.html" data-page="dashboard" class="active">主视图</a>
+  </nav>
+
+  <main class="container">
+    <!-- 区块1：标题 + 模拟更新时间 -->
+    <header class="hero">
+      <h1>四级备考助手 <span class="heart">❤️</span></h1>
+      <p class="subtitle">主视图（演示版）· <span id="updatedAt">刚刚更新</span></p>
+    </header>
+
+    <!-- 状态切换条：演示用，方便你分别看四种状态 -->
+    <div class="state-bar">
+      <button class="state-btn" data-state="loading">加载中</button>
+      <button class="state-btn active" data-state="success">成功</button>
+      <button class="state-btn" data-state="empty">空</button>
+      <button class="state-btn" data-state="error">错误</button>
+    </div>
+
+    <!-- 加载中状态 -->
+    <div id="loader" class="loader-box card" style="display:none;">
+      <div class="spinner"></div>
+      正在加载…
+    </div>
+
+    <!-- 错误状态 -->
+    <div id="error-box" class="error-box card" style="display:none;">
+      <div style="font-size:32px;">⚠️</div>
+      <div>数据加载失败，请稍后重试</div>
+      <button class="retry-btn" id="retryBtn">重新加载</button>
+    </div>
+
+    <!-- 正常内容（成功态 / 空态 共用） -->
+    <div id="view">
+      <!-- 区块2：四个统计卡片（写死的假数据） -->
+      <section class="stat-grid">
+        <div class="stat-card"><div class="stat-num" id="s-today">0</div><div class="stat-label">今日新学</div></div>
+        <div class="stat-card"><div class="stat-num" id="s-review">0</div><div class="stat-label">待复习错题</div></div>
+        <div class="stat-card"><div class="stat-num" id="s-total">0</div><div class="stat-label">累计学习单词</div></div>
+        <div class="stat-card"><div class="stat-num" id="s-acc">0%</div><div class="stat-label">答题正确率</div></div>
+      </section>
+
+      <!-- 区块3：最近学习的词 列表 -->
+      <section class="card">
+        <div class="section-title">最近学习的词</div>
+        <div id="empty-box" class="empty-box" style="display:none;">暂无学习记录，去「新词学习」背几个词吧 📚</div>
+        <div id="word-list"></div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    /* ===== 写死的本地假数据（不读 localStorage、不联网） ===== */
+    const MOCK = {
+      updatedAt: "刚刚更新",
+      stats: { today: 5, review: 3, total: 28, acc: "82%" },
+      words: [
+        { en: "abandon",  zh: "放弃",       status: "已掌握" },
+        { en: "ability",  zh: "能力",       status: "待复习" },
+        { en: "abroad",   zh: "在国外",     status: "已掌握" },
+        { en: "absence",  zh: "缺席",       status: "待复习" },
+        { en: "absolute", zh: "绝对的",     status: "已掌握" }
+      ]
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    function renderStats(s) {
+      $("s-today").textContent  = s.today;
+      $("s-review").textContent = s.review;
+      $("s-total").textContent  = s.total;
+      $("s-acc").textContent    = s.acc;
+    }
+
+    function renderList(words) {
+      const box = $("word-list");
+      box.innerHTML = "";
+      words.forEach((w, i) => {
+        const row = document.createElement("div");
+        row.className = "word-row";
+        const ok = w.status === "已掌握";
+        row.innerHTML =
+          '<div class="word-idx">' + (i + 1) + '</div>' +
+          '<div class="word-main"><div class="word-en">' + w.en + '</div>' +
+          '<div class="word-zh">' + w.zh + '</div></div>' +
+          '<div class="word-status ' + (ok ? 'status-ok' : 'status-wait') + '">' + w.status + '</div>';
+        box.appendChild(row);
+      });
+    }
+
+    function setState(state) {
+      // 切换按钮高亮
+      document.querySelectorAll(".state-btn").forEach(b =>
+        b.classList.toggle("active", b.dataset.state === state));
+
+      const loader = $("loader"), err = $("error-box"), view = $("view");
+      loader.style.display = "none";
+      err.style.display = "none";
+      view.style.display = "none";
+
+      if (state === "loading") {
+        loader.style.display = "block";
+        return;
+      }
+      if (state === "error") {
+        err.style.display = "block";
+        return;
+      }
+      // success / empty 都显示 view
+      view.style.display = "block";
+      if (state === "empty") {
+        renderStats({ today: 0, review: 0, total: 0, acc: "0%" });
+        $("empty-box").style.display = "block";
+        $("word-list").innerHTML = "";
+      } else {
+        renderStats(MOCK.stats);
+        $("empty-box").style.display = "none";
+        renderList(MOCK.words);
+      }
+    }
+
+    // 绑定切换按钮
+    document.querySelectorAll(".state-btn").forEach(b =>
+      b.addEventListener("click", () => setState(b.dataset.state)));
+    // 错误态的「重新加载」→ 回到成功态
+    $("retryBtn").addEventListener("click", () => setState("success"));
+
+    // 初始：成功态
+    $("updatedAt").textContent = MOCK.updatedAt;
+    setState("success");
+  </script>
+</body>
+</html>
