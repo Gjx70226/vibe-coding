@@ -67,7 +67,7 @@
   function posBadge(w) {
     var p = wordMap[w] && wordMap[w].pos;
     if (!p) return "";
-    return '<span class="pos-tag ' + p + '">' + p + "</span>";
+    return '<span class="pos-tag ' + p + '">' + p + ".</span>";
   }
 
   // 渲染当前这一题（题干=中文释义）
