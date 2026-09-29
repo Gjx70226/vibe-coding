@@ -94,15 +94,10 @@
 
     <!-- 正常内容（成功态 / 空态 共用） -->
     <div id="view">
-      <!-- 区块2：四个统计卡片（写死的假数据） -->
-      <section class="stat-grid">
-        <div class="stat-card"><div class="stat-num" id="s-today">0</div><div class="stat-label">今日新学</div></div>
-        <div class="stat-card"><div class="stat-num" id="s-review">0</div><div class="stat-label">待复习错题</div></div>
-        <div class="stat-card"><div class="stat-num" id="s-total">0</div><div class="stat-label">累计学习单词</div></div>
-        <div class="stat-card"><div class="stat-num" id="s-acc">0%</div><div class="stat-label">答题正确率</div></div>
-      </section>
+      <!-- 区块2：四个统计卡片（用可复用组件 UI.statCard 渲染） -->
+      <section class="stat-grid" id="statGrid"></section>
 
-      <!-- 区块3：最近学习的词 列表 -->
+      <!-- 区块3：最近学习的词 列表（用可复用组件 UI.wordRow 渲染） -->
       <section class="card">
         <div class="section-title">最近学习的词</div>
         <div id="empty-box" class="empty-box" style="display:none;">暂无学习记录，去「新词学习」背几个词吧 📚</div>
@@ -111,6 +106,7 @@
     </div>
   </main>
 
+  <script src="components.js"></script>
   <script>
     /* ===== 写死的本地假数据（不读 localStorage、不联网） ===== */
     const MOCK = {
@@ -128,26 +124,20 @@
     const $ = (id) => document.getElementById(id);
 
     function renderStats(s) {
-      $("s-today").textContent  = s.today;
-      $("s-review").textContent = s.review;
-      $("s-total").textContent  = s.total;
-      $("s-acc").textContent    = s.acc;
+      // 用可复用组件 UI.statCard 渲染四张卡（顺序：今日新学/待复习/累计/正确率）
+      const grid = $("statGrid");
+      grid.innerHTML = "";
+      [
+        [s.today,  "今日新学"],
+        [s.review, "待复习错题"],
+        [s.total,  "累计学习单词"],
+        [s.acc,    "答题正确率"]
+      ].forEach(([num, label]) => grid.appendChild(UI.statCard(num, label)));
     }
 
     function renderList(words) {
-      const box = $("word-list");
-      box.innerHTML = "";
-      words.forEach((w, i) => {
-        const row = document.createElement("div");
-        row.className = "word-row";
-        const ok = w.status === "已掌握";
-        row.innerHTML =
-          '<div class="word-idx">' + (i + 1) + '</div>' +
-          '<div class="word-main"><div class="word-en">' + w.en + '</div>' +
-          '<div class="word-zh">' + w.zh + '</div></div>' +
-          '<div class="word-status ' + (ok ? 'status-ok' : 'status-wait') + '">' + w.status + '</div>';
-        box.appendChild(row);
-      });
+      // 用可复用组件 UI.renderList + UI.wordRow 渲染列表（带序号）
+      UI.renderList($("word-list"), words, (w, i) => UI.wordRow(w.en, w.zh, w.status, i + 1));
     }
 
     function setState(state) {
