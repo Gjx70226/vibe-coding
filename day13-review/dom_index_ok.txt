@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
+<html lang="zh-CN"><head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>四级备考助手</title>
@@ -13,16 +12,16 @@
 
   <!-- 顶部胶囊导航：三个页面互相跳 -->
   <nav class="pill-nav">
-    <a href="index.html" data-page="index">首页</a>
+    <a href="index.html" data-page="index" class="active">首页</a>
     <a href="study.html" data-page="study">新词学习</a>
     <a href="review.html" data-page="review">错题复习</a>
   </nav>
 
   <main class="container">
     <!-- 加载中转圈：页面打开先显示，JS 延迟后隐藏（四态之"加载中"） -->
-    <div class="loading" id="loading"><div class="spinner"></div><span>加载中…</span></div>
+    <div class="loading" id="loading" hidden=""><div class="spinner"></div><span>加载中…</span></div>
 
-    <div id="content" hidden>
+    <div id="content">
     <header class="hero">
       <h1>四级备考助手 <span class="heart">❤️</span></h1>
       <p class="subtitle">记单词 · 自测 · 巩固生词</p>
@@ -66,11 +65,11 @@
     </section>
 
     <!-- 空状态：全新用户（啥都没学）时显示友好引导，复用 .empty-box -->
-    <div class="empty-box" id="homeEmpty" hidden>📚 还没有学习记录，点击下方「新词学习」开始背单词吧</div>
+    <div class="empty-box" id="homeEmpty">📚 还没有学习记录，点击下方「新词学习」开始背单词吧</div>
     </div><!-- /#content -->
 
     <!-- 出错状态：模拟加载失败时显示红条+重试（四态之"出错"） -->
-    <div class="error-box" id="errorBox" hidden>
+    <div class="error-box" id="errorBox" hidden="">
       <div class="err-icon">⚠️</div>
       <div class="err-text">加载失败，请检查网络后重试</div>
       <button class="retry-btn" id="retryBtn" type="button">重试</button>
@@ -80,5 +79,6 @@
   <!-- 先引入词库（定义全局 WORDS），再引入脚本（顺序不能反） -->
   <script src="words.js"></script>
   <script src="app.js"></script>
-</body>
-</html>
+
+
+</body></html>

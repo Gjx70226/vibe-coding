@@ -359,3 +359,122 @@ body {
 .status-ok { background: rgba(46, 204, 113, 0.12); color: var(--accent-green); }
 .status-wait { background: rgba(255, 107, 94, 0.12); color: var(--accent-red); }
 .empty-box { text-align: center; padding: 28px 20px; color: var(--text-soft); }
+
+/* ============================================================
+   Day 13 步骤1：加载中转圈（四态之"加载中"）
+   想调转圈颜色改 --accent-blue；想调速度改 animation 的 0.8s
+   ============================================================ */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 80px 20px;
+  color: var(--text-soft);
+  font-size: 14px;
+}
+/* hidden 属性必须能盖掉上面的 display:flex，否则转圈圈一直挂着不消失 */
+.loading[hidden] { display: none; }
+.spinner {
+  width: 38px;
+  height: 38px;
+  border: 4px solid rgba(37, 99, 235, 0.18);
+  border-top-color: var(--accent-blue);
+  border-radius: 50%;
+  animation: cet4-spin 0.8s linear infinite;
+}
+@keyframes cet4-spin { to { transform: rotate(360deg); } }
+
+/* ============================================================
+   Day 13 步骤3：出错红条（四态之"出错"）
+   想换错误色改 --accent-red；想调圆角改 --radius
+   ============================================================ */
+.error-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 32px 22px;
+  margin-top: 8px;
+  background: rgba(214, 69, 58, 0.08);
+  border: 1px solid rgba(214, 69, 58, 0.35);
+  border-radius: var(--radius);
+  color: var(--accent-red);
+  text-align: center;
+}
+.error-box[hidden] { display: none; }
+.error-box .err-icon { font-size: 34px; }
+.error-box .err-text { font-size: 15px; line-height: 1.6; }
+.retry-btn {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent-red);
+  border: none;
+  border-radius: 999px;
+  padding: 10px 26px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.retry-btn:hover { opacity: 0.9; }
+
+/* ============================================================
+   Day 13 板块三：单词详情页（detail.html）
+   要改外观就动下面这些，配色都来自上面 :root 变量
+   ============================================================ */
+.back-link {
+  display: inline-block;
+  text-decoration: none;
+  color: var(--text-soft);
+  font-size: 14px;
+  margin-bottom: 18px;
+}
+.back-link:hover { color: var(--text); }
+.detail-card { text-align: center; padding: 36px 28px; }
+.detail-word {
+  font-size: 46px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  word-break: break-word;
+}
+.detail-pos { margin: 14px 0 6px; min-height: 24px; }
+.detail-meaning {
+  font-size: 22px;
+  color: var(--text);
+  margin-top: 6px;
+}
+/* 信息明细行：左标签右值，像档案表 */
+.detail-meta {
+  margin-top: 28px;
+  border-top: 1px solid #f0ece6;
+  padding-top: 18px;
+  text-align: left;
+}
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 11px 4px;
+  border-bottom: 1px solid #f6f2ec;
+  font-size: 15px;
+}
+.meta-row:last-child { border-bottom: none; }
+.meta-key { color: var(--text-soft); }
+.meta-val { font-weight: 600; }
+
+/* 列表/卡片里的"详情"小链接：点一下跳到单词详情页 */
+.word-detail {
+  font-size: 13px;
+  color: var(--accent-blue);
+  text-decoration: none;
+  padding: 4px 12px;
+  border: 1px solid rgba(37, 99, 235, 0.3);
+  border-radius: 999px;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.word-detail:hover { background: rgba(37, 99, 235, 0.08); }
+/* 学习页词卡顶部：详情在左、收藏在右 */
+.word-head.has-detail { justify-content: space-between; }

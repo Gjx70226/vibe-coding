@@ -199,4 +199,47 @@ var CET4 = (function () {
 window.CET4 = CET4;
 
 // ===== 3. 首页加载即渲染四个数字 =====
-CET4.renderSummary();
+// Day 13 步骤1：先显示"加载中"转圈，延迟 400ms 再渲染内容（四态之"加载中"）
+function hideLoading() {
+  var l = document.getElementById("loading");
+  var c = document.getElementById("content");
+  if (l) l.hidden = true;
+  if (c) c.hidden = false;
+}
+function maybeHomeEmpty() {
+  var el = document.getElementById("homeEmpty");
+  if (!el) return;
+  var forceEmpty = new URLSearchParams(location.search).get("simempty") === "1";
+  var s = CET4.summary();
+  var isEmpty = forceEmpty || (s.todayNew === 0 && s.pending === 0 && s.totalLearned === 0);
+  el.hidden = !isEmpty;
+}
+
+function showError() {
+  var l = document.getElementById("loading");
+  var c = document.getElementById("content");
+  var e = document.getElementById("errorBox");
+  if (l) l.hidden = true;
+  if (c) c.hidden = true;
+  if (e) e.hidden = false;
+}
+
+function runNormal() {
+  hideLoading();
+  CET4.renderSummary();
+  maybeHomeEmpty();
+}
+
+// 重试按钮：隐藏红条，重新走正常流程（演示：忽略模拟错误）
+var retryBtn = document.getElementById("retryBtn");
+if (retryBtn) retryBtn.addEventListener("click", function () {
+  var e = document.getElementById("errorBox");
+  if (e) e.hidden = true;
+  runNormal();
+});
+
+setTimeout(function () {
+  var simError = new URLSearchParams(location.search).get("simerror") === "1";
+  if (simError) showError();
+  else runNormal();
+}, 400);

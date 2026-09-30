@@ -201,6 +201,7 @@
     row.innerHTML =
       '<span class="word-en">' + r.word + "</span>" +
       '<span class="word-zh">' + r.meaning + "</span>" +
+      '<a class="word-detail" href="detail.html?word=' + encodeURIComponent(r.word) + '">详情</a>' +
       '<span class="word-status ' + (isMastered ? "status-ok" : "status-wait") + '">' +
       (isMastered ? "已掌握" : "待复习") + "</span>";
     return row;
@@ -239,7 +240,39 @@
 
   // 输入框即时过滤（三种测试：有结果 / 无结果 / 清空恢复）
   searchInput.addEventListener("input", updateWrongList);
-  updateWrongList();
 
-  start();
+  // Day 13 步骤1：先显示"加载中"转圈，延迟 400ms 再渲染（四态之"加载中"）
+  function hideLoading() {
+    var l = document.getElementById("loading");
+    var c = document.getElementById("content");
+    if (l) l.hidden = true;
+    if (c) c.hidden = false;
+  }
+  // 出错状态：隐藏加载/内容，显示红条（四态之"出错"）
+  function showError() {
+    var l = document.getElementById("loading");
+    var c = document.getElementById("content");
+    var e = document.getElementById("errorBox");
+    if (l) l.hidden = true;
+    if (c) c.hidden = true;
+    if (e) e.hidden = false;
+  }
+
+  // 重试：隐藏红条，重新渲染清单与答题（演示用，忽略模拟错误）
+  var retryBtn = document.getElementById("retryBtn");
+  if (retryBtn) retryBtn.addEventListener("click", function () {
+    var e = document.getElementById("errorBox");
+    if (e) e.hidden = true;
+    hideLoading();
+    updateWrongList();
+    start();
+  });
+
+  setTimeout(function () {
+    var simError = new URLSearchParams(location.search).get("simerror") === "1";
+    if (simError) { showError(); return; }
+    hideLoading();
+    updateWrongList();
+    start();
+  }, 400);
 })();

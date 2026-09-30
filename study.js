@@ -96,6 +96,9 @@
     favBtn.classList.toggle("faved", CET4.isFavorite(t.word));
     favBtn.setAttribute("aria-label", (CET4.isFavorite(t.word) ? "取消收藏 " : "收藏 ") + t.word);
     favBtn.onclick = function () { toggleFav(t.word); };
+    // 详情链接指向当前这个词（点一下跳到 detail.html?word=xxx）
+    var dl = document.getElementById("detailLink");
+    if (dl) dl.href = "detail.html?word=" + encodeURIComponent(t.word);
     feedbackEl.textContent = "";
     feedbackEl.className = "feedback";
     nextBtn.style.display = "none";
@@ -163,13 +166,54 @@
     };
   }
 
+  // 空状态：词库未加载/异常时显示提示，避免白屏
+  function showStudyEmpty() {
+    if (quizEl) quizEl.style.display = "none";
+    var el = document.getElementById("studyEmpty");
+    if (el) el.hidden = false;
+  }
+
   // 开始新一轮
   function start() {
+    var sim = new URLSearchParams(location.search).get("simempty") === "1";
+    // 注意：words.js 用 const 声明 WORDS，不会挂到 window，所以检查 typeof 而非 window.WORDS
+    if (sim || typeof WORDS === "undefined" || WORDS.length === 0) { showStudyEmpty(); return; }
     queue = pickSession();
     idx = 0;
     correctCount = 0;
     render();
   }
 
-  start();
+  // Day 13 步骤1：先显示"加载中"转圈，延迟 400ms 再开始答题（四态之"加载中"）
+  function hideLoading() {
+    var l = document.getElementById("loading");
+    var c = document.getElementById("content");
+    if (l) l.hidden = true;
+    if (c) c.hidden = false;
+  }
+  // 出错状态：隐藏加载/内容，显示红条（四态之"出错"）
+  function showError() {
+    var l = document.getElementById("loading");
+    var c = document.getElementById("content");
+    var e = document.getElementById("errorBox");
+    if (l) l.hidden = true;
+    if (c) c.hidden = true;
+    if (e) e.hidden = false;
+  }
+
+  // 重试：隐藏红条，重新渲染答题（演示用，忽略模拟错误）
+  var retryBtn = document.getElementById("retryBtn");
+  if (retryBtn) retryBtn.addEventListener("click", function () {
+    var e = document.getElementById("errorBox");
+    if (e) e.hidden = true;
+    hideLoading();
+    start();
+  });
+
+  setTimeout(function () {
+    var simError = new URLSearchParams(location.search).get("simerror") === "1";
+    if (simError) { showError(); return; }
+    hideLoading();
+    start();
+  }, 400);
 })();

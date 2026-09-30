@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>单词详情 · 四级备考助手</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="blob blob-a"></div>
+  <div class="blob blob-b"></div>
+
+  <nav class="pill-nav">
+    <a href="index.html" data-page="index">首页</a>
+    <a href="study.html" data-page="study">新词学习</a>
+    <a href="review.html" data-page="review">错题复习</a>
+  </nav>
+
+  <main class="container">
+    <!-- 加载中转圈（四态之"加载中"） -->
+    <div class="loading" id="loading" hidden=""><div class="spinner"></div><span>加载中…</span></div>
+
+    <div id="content">
+      <a class="back-link" href="review.html" id="backLink">← 返回</a>
+      <section class="card detail-card">
+        <div class="detail-word" id="dWord">important</div>
+        <div class="phonetic" id="dPhonetic">/ɪmˈpɔːtnt/</div>
+        <div class="detail-pos" id="dPos"><span class="pos-tag A">A</span> 形容词</div>
+        <div class="detail-meaning" id="dMeaning">重要的</div>
+
+        <div class="detail-meta">
+          <div class="meta-row"><span class="meta-key">收藏状态</span><span class="meta-val" id="dFav">☆ 未收藏</span></div>
+          <div class="meta-row"><span class="meta-key">核心排名</span><span class="meta-val" id="dRank">#1 / 共 1229 词</span></div>
+          <div class="meta-row"><span class="meta-key">学习状态</span><span class="meta-val" id="dLearned">还没学过</span></div>
+          <div class="meta-row"><span class="meta-key">答对 / 答错</span><span class="meta-val" id="dStat">暂未统计</span></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- 出错状态：模拟加载失败时显示红条+重试（四态之"出错"） -->
+    <div class="error-box" id="errorBox" hidden="">
+      <div class="err-icon">⚠️</div>
+      <div class="err-text">加载失败，请检查网络后重试</div>
+      <button class="retry-btn" id="retryBtn" type="button">重试</button>
+    </div>
+  </main>
+
+  <!-- 顺序：先词库 → 再本页逻辑(detail.js) -->
+  <script src="words.js"></script>
+  <script src="detail.js"></script>
+
+
+</body></html>

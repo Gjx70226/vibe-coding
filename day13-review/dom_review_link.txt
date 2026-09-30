@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="loading" id="loading" hidden=""><div class="spinner"></div><span>加载中…</span></div>
+  <div id="content">
+    <section class="card word-list-card" id="wrongListCard">
+      <div class="list-head">
+        <span class="section-title">错题清单</span>
+        <span class="count-badge" id="wrongCount">2 个</span>
+      </div>
+      <div class="search-box"><input type="text" id="searchInput" class="search-input"></div>
+      <div id="wrongList" class="wrong-list"><div class="wrong-row"><span class="word-en">important</span><span class="word-zh">重要的</span><a class="word-detail" href="detail.html?word=important">详情</a><span class="word-status status-wait">待复习</span></div><div class="wrong-row"><span class="word-en">student</span><span class="word-zh">学生；学者</span><a class="word-detail" href="detail.html?word=student">详情</a><span class="word-status status-ok">已掌握</span></div></div>
+      <div id="wrongEmpty" class="empty-box" style="display:none;"></div>
+    </section>
+    <section class="quiz-card" id="quiz" style="display: block;">
+      <div class="progress" id="progress"></div>
+      <div class="word-head"><button class="fav-btn" id="favBtn" type="button"></button></div>
+      <div class="word-display" id="word"></div>
+      <div class="phonetic" id="phonetic"></div>
+      <div class="options" id="options"></div>
+      <div class="feedback" id="feedback"></div>
+      <button class="next-btn" id="nextBtn" style="display:none"></button>
+    </section>
+  </div>
+  <div class="error-box" id="errorBox" hidden="">
+    <button class="retry-btn" id="retryBtn" type="button">重试</button>
+  </div>
+  <!-- 先写入一条错题数据，再加载逻辑脚本 -->
+  <script>
+    localStorage.setItem("cet4_wrong", JSON.stringify([
+      { word: "important", status: "pending" },
+      { word: "student", status: "mastered" }
+    ]));
+  </script>
+  <script src="words.js"></script>
+  <script src="app.js"></script>
+  <script src="review.js"></script>
+
+
+</body></html>

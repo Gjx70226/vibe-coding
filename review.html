@@ -17,6 +17,10 @@
   </nav>
 
   <main class="container">
+    <!-- 加载中转圈（四态之"加载中"） -->
+    <div class="loading" id="loading"><div class="spinner"></div><span>加载中…</span></div>
+
+    <div id="content" hidden>
     <header class="hero">
       <h1>错题复习 <span class="heart">🔁</span></h1>
       <p class="subtitle">看中文释义，选出正确英文单词；答对即移出待复习</p>
@@ -49,6 +53,14 @@
     </section>
 
     <section class="result-card" id="result" style="display:none"></section>
+    </div><!-- /#content -->
+
+    <!-- 出错状态：模拟加载失败时显示红条+重试（四态之"出错"） -->
+    <div class="error-box" id="errorBox" hidden>
+      <div class="err-icon">⚠️</div>
+      <div class="err-text">加载失败，请检查网络后重试</div>
+      <button class="retry-btn" id="retryBtn" type="button">重试</button>
+    </div>
   </main>
 
   <!-- 顺序：先词库 → 再存储层(app.js) → 再本页逻辑(review.js) -->
