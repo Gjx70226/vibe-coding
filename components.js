@@ -54,6 +54,21 @@
     return c;
   }
 
+  // 轻量 toast 提示：用于交互反馈（成功 / 失败 / 普通）
+  function toast(msg, type) {
+    var t = document.getElementById("ui-toast");
+    if (!t) {
+      t = document.createElement("div");
+      t.id = "ui-toast";
+      t.className = "ui-toast";
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.className = "ui-toast show" + (type ? " " + type : "");
+    clearTimeout(t._timer);
+    t._timer = setTimeout(function () { t.className = "ui-toast"; }, 1600);
+  }
+
   // 对外暴露
-  global.UI = { el: el, statCard: statCard, wordRow: wordRow, renderList: renderList, card: card };
+  global.UI = { el: el, statCard: statCard, wordRow: wordRow, renderList: renderList, card: card, toast: toast };
 })(window);

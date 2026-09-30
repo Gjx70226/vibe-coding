@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新词学习 · 四级备考助手</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <div class="blob blob-a"></div>
+  <div class="blob blob-b"></div>
+
+  <nav class="pill-nav">
+    <a href="index.html" data-page="index">首页</a>
+    <a href="study.html" data-page="study">新词学习</a>
+    <a href="review.html" data-page="review">错题复习</a>
+  </nav>
+
+  <main class="container">
+    <!-- 地址栏证据条 -->
+    <div class="addr-bar">
+      <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+      <div class="url">http://127.0.0.1:8000/study.html</div>
+    </div>
+
+    <!-- 单词卡：点击后 = 实心★ + 成功 toast -->
+    <section class="quiz-card" id="quiz">
+      <div class="progress" id="progress">第 1 / 10 词</div>
+      <div class="word-head">
+        <button class="fav-btn faved" id="favBtn" type="button" aria-label="收藏单词">
+          <span class="star-empty">☆</span><span class="star-full">★</span>
+        </button>
+      </div>
+      <div class="word-display" id="word">respond</div>
+      <div class="phonetic" id="phonetic">/rɪˈspɒnd/</div>
+      <div class="options" id="options">
+        <button class="option-btn"><span class="pos-tag V">V.</span>回应；回答</button>
+        <button class="option-btn"><span class="pos-tag N">N.</span>回应</button>
+        <button class="option-btn"><span class="pos-tag N">N.</span>尊重；方面</button>
+        <button class="option-btn"><span class="pos-tag N">N.</span>保留；预定</button>
+      </div>
+      <div class="feedback" id="feedback"></div>
+      <button class="next-btn" id="nextBtn" style="display:none"></button>
+    </section>
+  </main>
+
+  <!-- 成功反馈 toast -->
+  <div id="ui-toast" class="ui-toast show ok">⭐ 已收藏</div>
+</body>
+</html>

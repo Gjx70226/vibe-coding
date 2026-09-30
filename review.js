@@ -25,6 +25,7 @@
   var optionsEl = document.getElementById("options");
   var feedbackEl = document.getElementById("feedback");
   var nextBtn = document.getElementById("nextBtn");
+  var favBtn = document.getElementById("favBtn");
 
   // 随机打乱数组（不改动原数组）
   function shuffle(arr) {
@@ -70,6 +71,20 @@
     return '<span class="pos-tag ' + p + '">' + p + ".</span>";
   }
 
+  // 收藏/取消收藏（Day 11）：防连点 + 成功/失败反馈
+  function toggleFav(word) {
+    if (favBtn.disabled) return;
+    favBtn.disabled = true;
+    setTimeout(function () { favBtn.disabled = false; }, 100);
+    try {
+      var nowFav = CET4.toggleFavorite(word);
+      favBtn.classList.toggle("faved", nowFav);
+      UI.toast(nowFav ? "⭐ 已收藏" : "已取消收藏", "ok");
+    } catch (e) {
+      UI.toast("收藏失败，稍后再试", "no");
+    }
+  }
+
   // 渲染当前这一题（题干=中文释义）
   function render() {
     answered = false;
@@ -78,6 +93,9 @@
     progressEl.textContent = "第 " + (idx + 1) + " / " + queue.length + " 个错题";
     wordEl.textContent = t.meaning;     // 题干显示中文
     phoneticEl.textContent = "";        // 复习页不提前暴露音标（避免泄底）
+    // 收藏按钮：针对当前英文词，反映收藏状态
+    favBtn.classList.toggle("faved", CET4.isFavorite(word));
+    favBtn.onclick = function () { toggleFav(word); };
     feedbackEl.textContent = "";
     feedbackEl.className = "feedback";
     nextBtn.style.display = "none";

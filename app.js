@@ -20,6 +20,7 @@ var CET4 = (function () {
   var KEY_STATS = "cet4_stats";
   var KEY_WRONG = "cet4_wrong";
   var KEY_LEARNED = "cet4_learned";
+  var KEY_FAV = "cet4_favorites"; // 收藏词列表
 
   // 今天日期字符串 YYYY-MM-DD（用于跨天判断）
   function todayStr() {
@@ -156,6 +157,29 @@ var CET4 = (function () {
     saveWrong(wrong);
   }
 
+  // ===== 收藏功能（Day 11 新增，独立 key，不影响判题/记账） =====
+  function getFavorites() {
+    try { return JSON.parse(localStorage.getItem(KEY_FAV)) || []; }
+    catch (e) { return []; }
+  }
+  function saveFavorites(arr) {
+    localStorage.setItem(KEY_FAV, JSON.stringify(arr));
+  }
+  // 是否已收藏
+  function isFavorite(word) {
+    return getFavorites().indexOf(word) !== -1;
+  }
+  // 切换收藏状态，成功返回新状态（true=已收藏）；localStorage 异常时抛错，由调用方兜底
+  function toggleFavorite(word) {
+    var f = getFavorites();
+    var i = f.indexOf(word);
+    var nowFav;
+    if (i === -1) { f.push(word); nowFav = true; }
+    else { f.splice(i, 1); nowFav = false; }
+    saveFavorites(f);
+    return nowFav;
+  }
+
   // 暴露接口
   return {
     summary: summary,
@@ -164,7 +188,10 @@ var CET4 = (function () {
     recordWrongReview: recordWrongReview,
     getStats: getStats,
     getWrong: getWrong,
-    getLearned: getLearned
+    getLearned: getLearned,
+    getFavorites: getFavorites,
+    isFavorite: isFavorite,
+    toggleFavorite: toggleFavorite
   };
 })();
 
