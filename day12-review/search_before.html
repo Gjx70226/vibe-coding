@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>错题复习 · 演示</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    body { padding: 40px 20px; }
+    .wrap { max-width: 720px; margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- 假地址栏（headless 截图无真实浏览器栏，页面内画一个） -->
+    <div class="addr-bar">
+      <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+      <span class="url">http://127.0.0.1:8000/review.html</span>
+    </div>
+
+    <section class="card word-list-card" id="wrongListCard">
+      <div class="list-head">
+        <span class="section-title">错题清单</span>
+        <span class="count-badge">6 个</span>
+      </div>
+      <div class="search-box">
+        <input type="text" class="search-input" placeholder="搜英文或中文释义…" aria-label="搜索错题">
+      </div>
+      <div class="wrong-list">
+        <div class="wrong-row"><span class="word-en">able</span><span class="word-zh">能够</span><span class="word-status status-ok">已掌握</span></div>
+        <div class="wrong-row"><span class="word-en">about</span><span class="word-zh">关于</span><span class="word-status status-wait">待复习</span></div>
+        <div class="wrong-row"><span class="word-en">above</span><span class="word-zh">在…上面</span><span class="word-status status-wait">待复习</span></div>
+        <div class="wrong-row"><span class="word-en">accept</span><span class="word-zh">接受</span><span class="word-status status-wait">待复习</span></div>
+        <div class="wrong-row"><span class="word-en">achieve</span><span class="word-zh">达成</span><span class="word-status status-ok">已掌握</span></div>
+        <div class="wrong-row"><span class="word-en">across</span><span class="word-zh">穿过</span><span class="word-status status-wait">待复习</span></div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

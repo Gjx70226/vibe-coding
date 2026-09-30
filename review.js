@@ -26,6 +26,11 @@
   var feedbackEl = document.getElementById("feedback");
   var nextBtn = document.getElementById("nextBtn");
   var favBtn = document.getElementById("favBtn");
+  // Day 12：错题清单 + 搜索框元素
+  var searchInput = document.getElementById("searchInput");
+  var wrongListEl = document.getElementById("wrongList");
+  var wrongEmptyEl = document.getElementById("wrongEmpty");
+  var wrongCountEl = document.getElementById("wrongCount");
 
   // 随机打乱数组（不改动原数组）
   function shuffle(arr) {
@@ -153,6 +158,7 @@
 
   // 一轮结束
   function showResult() {
+    updateWrongList(); // 复习后错题本可能变化，同步刷新清单
     quizEl.style.display = "none";
     resultEl.style.display = "block";
     var remain = pendingWords().length; // 复习完这批后还剩下的待复习数
@@ -177,6 +183,63 @@
     resultEl.style.display = "none";
     render();
   }
+
+  // ===== Day 12：错题清单 + 关键词搜索（筛选交互） =====
+  // 把错题本整理成「英文 + 中文 + 掌握状态」的行数据
+  function buildWrongRows() {
+    return CET4.getWrong().map(function (w) {
+      var t = wordMap[w.word];
+      return { word: w.word, meaning: t ? t.meaning : "", status: w.status };
+    });
+  }
+
+  // 渲染单行
+  function renderWrongRow(r) {
+    var row = document.createElement("div");
+    row.className = "wrong-row";
+    var isMastered = r.status === "mastered";
+    row.innerHTML =
+      '<span class="word-en">' + r.word + "</span>" +
+      '<span class="word-zh">' + r.meaning + "</span>" +
+      '<span class="word-status ' + (isMastered ? "status-ok" : "status-wait") + '">' +
+      (isMastered ? "已掌握" : "待复习") + "</span>";
+    return row;
+  }
+
+  // 渲染清单 + 按关键词过滤（核心筛选逻辑）
+  function updateWrongList() {
+    var rows = buildWrongRows();
+    var q = (searchInput.value || "").trim().toLowerCase();
+    wrongCountEl.textContent = rows.length + " 个";
+
+    if (rows.length === 0) {
+      wrongListEl.innerHTML = "";
+      wrongEmptyEl.style.display = "block";
+      wrongEmptyEl.textContent = "还没有错题记录，去「新词学习」背几个词吧";
+      return;
+    }
+
+    var filtered = rows.filter(function (r) {
+      if (!q) return true;
+      return r.word.toLowerCase().indexOf(q) !== -1 ||
+             r.meaning.toLowerCase().indexOf(q) !== -1;
+    });
+
+    if (filtered.length === 0) {
+      wrongListEl.innerHTML = "";
+      wrongEmptyEl.style.display = "block";
+      wrongEmptyEl.textContent = "没有找到相关内容";
+      return;
+    }
+
+    wrongEmptyEl.style.display = "none";
+    wrongListEl.innerHTML = "";
+    filtered.forEach(function (r) { wrongListEl.appendChild(renderWrongRow(r)); });
+  }
+
+  // 输入框即时过滤（三种测试：有结果 / 无结果 / 清空恢复）
+  searchInput.addEventListener("input", updateWrongList);
+  updateWrongList();
 
   start();
 })();

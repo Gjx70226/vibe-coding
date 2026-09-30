@@ -318,3 +318,44 @@ body {
 .addr-bar .dot.y { background: #febc2e; }
 .addr-bar .dot.g { background: #28c840; }
 .addr-bar .url { flex: 1; background: #fff; border-radius: 7px; padding: 5px 10px; font-family: monospace; color: #333; }
+
+/* ============================================================
+   Day 12 新增：错题清单 + 关键词搜索（筛选交互）
+   ============================================================ */
+.word-list-card { margin-bottom: 24px; }
+.list-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+.section-title { font-size: 17px; font-weight: 700; }
+.count-badge { font-size: 13px; color: var(--text-soft); font-weight: 400; }
+.search-box { padding: 0 2px 12px; }
+.search-input {
+  width: 100%;
+  font-family: inherit;
+  font-size: 15px;
+  padding: 10px 14px;
+  border: 1px solid #e2dccf;
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.search-input:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+.search-input:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 1px; }
+.wrong-list { padding: 4px 2px 0; }
+.wrong-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 2px;
+  border-bottom: 1px solid #f0ece6;
+}
+.wrong-row:last-child { border-bottom: none; }
+.wrong-row .word-en { font-weight: 600; font-size: 16px; }
+.wrong-row .word-zh { color: var(--text-soft); font-size: 13px; flex: 1; }
+.wrong-row .word-status { font-size: 12px; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.status-ok { background: rgba(46, 204, 113, 0.12); color: var(--accent-green); }
+.status-wait { background: rgba(255, 107, 94, 0.12); color: var(--accent-red); }
+.empty-box { text-align: center; padding: 28px 20px; color: var(--text-soft); }

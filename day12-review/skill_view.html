@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SKILL.md · 演示</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    body { padding: 40px 20px; }
+    .wrap { max-width: 860px; margin: 0 auto; }
+    .file-head { font-weight: 700; font-size: 18px; margin: 4px 0 14px; }
+    pre {
+      background: #faf8f5; border: 1px solid #ececec; border-radius: 12px;
+      padding: 18px; font-size: 12.5px; line-height: 1.7; color: #333;
+      white-space: pre-wrap; word-break: break-word; max-height: 760px; overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- 假地址栏，URL 以 SKILL.md 结尾，证明这是项目内的 Skill 文件 -->
+    <div class="addr-bar">
+      <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+      <span class="url">http://127.0.0.1:8000/.workbuddy/skills/frontend-design-review/SKILL.md</span>
+    </div>
+    <div class="card">
+      <div class="file-head">SKILL.md（项目内前端设计审查 Skill）</div>
+      <pre>---
+name: frontend-design-review
+description:（项目内版本，内容同用户级 frontend-design-review，迁移自 design-rules.md）当用户要审查或美化前端页面（HTML/CSS）时，按颜色对比/字体/信息层级/间距/按钮状态/移动端六个维度挑毛病并逐个修复，保留修改前+修改后截图作为证据。
+---
+
+# 前端页面设计审查与修复（项目内版）
+> 给「四级备考助手」项目定的视觉检查清单。每次改页面外观，照三步走：
+> 改前查什么 → 改时守什么 → 改完怎么验。
+
+## 文件位置
+- 本文件：项目根目录/.workbuddy/skills/frontend-design-review/SKILL.md
+- 同源人读版：项目根目录/design-rules.md
+- 调用记录与证据截图统一放：项目根目录/dayXX-review/
+
+## 调用方法
+- 对话里说「设计审查 / 美化页面 / 审查本页 / 改样式」触发；或在 Skill 工具里选 frontend-design-review。
+- 调用后按「改前审查 → 改时遵守 → 改完验证」三步执行，产出 before/after 截图 + SKILL_CALL.md。
+
+## 一、改前审查（6 个维度）
+颜色对比 / 字体大小 / 信息层级 / 间距 / 按钮状态 / 移动端
+
+## 七、3 个可观察的成功标准
+1. 证据成对：dayXX-review/ 下存在 before_*.png 与 after_*.png，after 图带地址栏、能看清新增控件。
+2. 问题可指：SKILL_CALL.md 至少列出 ≥3 处「与设计规则不符」的发现，每条对应 before/after。
+3. 不破坏功能：≤560px 无横向溢出，原有按钮/链接功能未被影响，SKILL_CALL.md 写明结论。</pre>
+    </div>
+  </div>
+</body>
+</html>
