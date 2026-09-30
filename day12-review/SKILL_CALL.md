@@ -1,7 +1,7 @@
-# Day 12｜frontend-design-review Skill 调用记录
+# Day 12｜frontend-guidelines Skill 调用记录
 
 - **调用时间**：2026-09-30
-- **调用方式**：按项目内 Skill `.workbuddy/skills/frontend-design-review/SKILL.md` 的「改前查 → 改时守 → 改完验」三步执行
+- **调用方式**：按项目内 Skill `.workbuddy/skills/frontend-guidelines/SKILL.md` 的「改前查 → 改时守 → 改完验」三步执行
 - **审查对象**：Day 12 新增的「错题清单 + 关键词搜索框」（review.html / review.js / style.css）
 
 ## 一、改前审查（6 维度结论）

@@ -1,6 +1,6 @@
 ---
-name: frontend-design-review
-description: （项目内版本，内容同用户级 frontend-design-review，迁移自 design-rules.md）当用户要审查或美化前端页面（HTML/CSS）时，按颜色对比/字体/信息层级/间距/按钮状态/移动端六个维度挑毛病并逐个修复，保留修改前+修改后截图作为证据。触发词：美化页面、改样式、前端审查、设计审查、UI 审查、设计规则、审查页面、修一下样式。
+name: frontend-guidelines
+description: 本项目的前端页面设计规则，用于检查信息层级、字体、颜色对比、间距和移动端布局问题。当用户要审查或美化前端页面（HTML/CSS）时，按颜色对比/字体/信息层级/间距/按钮状态/移动端六个维度挑毛病并逐个修复，保留修改前+修改后截图作为证据。触发词：美化页面、改样式、前端审查、设计审查、UI 审查、设计规则、审查页面、修一下样式。
 ---
 
 # 前端页面设计审查与修复（项目内版）
@@ -9,12 +9,12 @@ description: （项目内版本，内容同用户级 frontend-design-review，�
 > **改前查什么 → 改时守什么 → 改完怎么验**。
 
 ## 文件位置
-- 本文件：`项目根目录/.workbuddy/skills/frontend-design-review/SKILL.md`
+- 本文件：`项目根目录/.workbuddy/skills/frontend-guidelines/SKILL.md`
 - 同源人读版：`项目根目录/design-rules.md`
 - 调用记录与证据截图统一放：`项目根目录/dayXX-review/`（XX 为当日天数）
 
 ## 调用方法
-- 对话里说「设计审查 / 美化页面 / 审查本页 / 改样式 / 前端审查 / UI 审查」触发（匹配上面的触发词）；或在 Skill 工具里选 `frontend-design-review`。
+- 对话里说「设计审查 / 美化页面 / 审查本页 / 改样式 / 前端审查 / UI 审查」触发（匹配上面的触发词）；或在 Skill 工具里选 `frontend-guidelines`。
 - 调用后严格按下面「一、改前审查 → 二、改时遵守 → 三、改完验证」三步执行，并产出 before/after 截图 + `dayXX-review/SKILL_CALL.md` 调用记录。
 
 ## 适用场景
