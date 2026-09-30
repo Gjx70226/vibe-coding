@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>a11y 自检</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <!-- 跟真页面一模一样的结构：跳过导航链接 + 正文容器 + 播报腔 -->
+  <a class="skip-link" href="#main">跳到正文</a>
+  <main id="main" tabindex="-1">这里是正文</main>
+  <div id="srLive" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="../components.js"></script>
+  <script>
+    // 一行结论写进标题，dump-dom 就能看到（headless 里没有读屏器，只能查焦点落到哪）
+    UI.initA11y("自检页", "测试一句");
+    var focusId = document.activeElement ? document.activeElement.id : "（无焦点）";
+    var live = document.getElementById("srLive");
+    // ?focus=1 时模拟「按下键盘 Tab」：焦点停到跳过导航链接上（截图用，真实键盘按一下同理）
+    if (location.search.indexOf("focus=1") > -1) {
+      document.querySelector(".skip-link").focus();
+      focusId = document.activeElement.className + "（" + document.activeElement.textContent + "）";
+    }
+    document.title = "焦点=" + focusId + "｜播报=" + live.textContent;
+  </script>
+</body>
+</html>

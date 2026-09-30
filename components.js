@@ -117,10 +117,40 @@
     if (box) box.hidden = false;
   }
 
+  // ============================================================
+  // 无障碍零件（第 3 步：跳过导航 + 切页播报）
+  // 页面里备好两个东西就行：
+  //   <main id="main" tabindex="-1">           正文容器
+  //   <div id="srLive" class="sr-only" aria-live="polite"></div>   播报腔
+  // 用法：每页加载完调一次  UI.initA11y("新词学习")
+  //   ① 焦点自动落到正文开头（读屏软件从这里往下念，不会卡在导航）
+  //   ② 腔里念一句「已进入：新词学习」
+  // ============================================================
+
+  // 往播报腔里写一句话（屏幕阅读器会实时念出来）
+  // 例：UI.announce("答错了，再选一次")
+  function announce(msg) {
+    var live = document.getElementById("srLive");
+    if (live) live.textContent = msg;
+  }
+
+  // 页面进场：焦点落正文 + 播报「已进入：xxx」
+  // 第二个参数可补一句更具体的，例：UI.initA11y("单词详情", "important，第 1 个词")
+  function initA11y(pageName, extra) {
+    var main = document.getElementById("main");
+    if (main && main.focus) {
+      // preventScroll：只搬焦点、不动页面滚动条，免得视觉上跳一下
+      try { main.focus({ preventScroll: true }); }
+      catch (e) { main.focus(); }
+    }
+    announce("已进入" + pageName + (extra ? "：" + extra : ""));
+  }
+
   // 对外暴露
   global.UI = {
     el: el, statCard: statCard, wordRow: wordRow, renderList: renderList,
     card: card, toast: toast,
-    pageLoading: pageLoading, pageReady: pageReady, pageError: pageError, pageEmpty: pageEmpty
+    pageLoading: pageLoading, pageReady: pageReady, pageError: pageError, pageEmpty: pageEmpty,
+    announce: announce, initA11y: initA11y
   };
 })(window);

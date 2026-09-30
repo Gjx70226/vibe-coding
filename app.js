@@ -54,6 +54,7 @@ window.CET4 = {
 // ===== 3. 四态流程：正常 / 出错 =====
 function runNormal() {
   UI.pageReady();
+  UI.initA11y("首页");   // 无障碍：焦点落正文 + 读屏念「已进入：首页」
   renderSummary();
   maybeHomeEmpty();
 }

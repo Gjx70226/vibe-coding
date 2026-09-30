@@ -199,5 +199,9 @@
     if (simError) { UI.pageError(); return; }
     UI.pageReady();
     start();
+    // 无障碍：焦点落正文 + 读屏念「已进入：新词学习」
+    // 第二句把当前那道题也念进去（render 之后才拿得到第一个词）
+    var first = document.getElementById("word");
+    UI.initA11y("新词学习", first && first.textContent ? "第 1 题：" + first.textContent : "");
   }, 400);
 })();

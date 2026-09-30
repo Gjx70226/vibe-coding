@@ -258,5 +258,9 @@
     UI.pageReady();
     updateWrongList();
     start();
+    // 无障碍：焦点落正文 + 读屏念「已进入：错题复习」（没错题就补一句「暂无错题」）
+    var n = document.getElementById("wrongCount");
+    n = n ? (parseInt(n.textContent, 10) || 0) : 0;
+    UI.initA11y("错题复习", n > 0 ? "待复习 " + n + " 个" : "暂无错题");
   }, 400);
 })();

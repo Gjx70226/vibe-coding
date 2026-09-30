@@ -29,6 +29,45 @@ body {
   overflow-x: hidden;
 }
 
+/* ============================================================
+   无障碍两件套（学自徐慧站）
+   1. .skip-link  键盘第一下 Tab 就跳到正文的隐形链接
+   2. .sr-only    只有读屏软件念、眼睛看不见的文字（切页播报用）
+   ============================================================ */
+
+/* 跳过导航：平时藏在画面外，按 Tab  focused 时从左上角滑出来 */
+.skip-link {
+  position: absolute;
+  left: -9999px;                 /* 平时挪出屏幕，看不见也点不到 */
+  top: 0;
+  z-index: 999;
+  padding: 10px 16px;
+  background: var(--accent-blue);
+  color: #fff;                   /* 蓝底白字，对比度够 */
+  border-radius: 0 0 var(--radius-sm) 0;
+  font-size: 15px;
+  text-decoration: none;
+}
+.skip-link:focus {
+  left: 0;                       /* 一按 Tab 就滑进画面，看得见 */
+  outline: 3px solid var(--text);
+  outline-offset: 2px;
+}
+
+/* 只给读屏软件看的文字 */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 正文容器拿到焦点时不要画难看的描边框（焦点已在，不必再显示） */
+#main:focus { outline: none; }
+
 /* 背景光斑：两个模糊彩色圆，纯装饰 */
 .blob {
   position: fixed;

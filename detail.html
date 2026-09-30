@@ -10,13 +10,16 @@
   <div class="blob blob-a"></div>
   <div class="blob blob-b"></div>
 
+  <!-- 无障碍：键盘第一下 Tab 就能跳过导航直接进正文 -->
+  <a class="skip-link" href="#main">跳到正文</a>
+
   <nav class="pill-nav">
     <a href="index.html" data-page="index">首页</a>
     <a href="study.html" data-page="study">新词学习</a>
     <a href="review.html" data-page="review">错题复习</a>
   </nav>
 
-  <main class="container">
+  <main class="container" id="main" tabindex="-1">
     <!-- 加载中转圈（四态之"加载中"） -->
     <div class="loading" id="loading"><div class="spinner"></div><span>加载中…</span></div>
 
@@ -49,6 +52,9 @@
   <script src="components.js"></script>
   <script src="store.js"></script>
   <script src="words.js"></script>
+  <!-- 切页播报腔：读屏软件会念这里的一句话（眼睛看不见） -->
+  <div id="srLive" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
   <script src="detail.js"></script>
 </body>
 </html>

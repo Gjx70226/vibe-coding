@@ -81,6 +81,12 @@
   // 入口：先转圈 400ms，再按状态分流
   setTimeout(function () {
     if (simError) UI.pageError();
-    else { UI.pageReady(); render(); }
+    else {
+      UI.pageReady();
+      render();
+      // 无障碍：焦点落正文 + 读屏念「已进入：单词详情：important」，查不到就念「没找到这个词」
+      var w = document.getElementById("dWord");
+      UI.initA11y("单词详情", w && w.textContent ? w.textContent : "没找到这个词");
+    }
   }, 400);
 })();
