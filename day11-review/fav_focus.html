@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新词学习 · 四级备考助手</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    /* 演示页：让聚焦边框在截图时可见（真实 app 用 :focus-visible，键盘聚焦才显示） */
+    .fav-btn:focus { outline: 3px solid #2f6fed; outline-offset: 2px; }
+    .fav-btn.faved { color: #f5b301; }
+    .fav-btn.faved .star-empty { display: none; }
+    .fav-btn.faved .star-full { display: inline; }
+    .focus-tip { font-size: 13px; color: #2f6fed; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="blob blob-a"></div>
+  <div class="blob blob-b"></div>
+
+  <nav class="pill-nav">
+    <a href="index.html" data-page="index">首页</a>
+    <a href="study.html" data-page="study">新词学习</a>
+    <a href="review.html" data-page="review">错题复习</a>
+  </nav>
+
+  <main class="container">
+    <!-- 地址栏证据条：证明这是本地服务页面 -->
+    <div class="addr-bar">
+      <div class="dots"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span></div>
+      <div class="url">http://127.0.0.1:8000/study.html</div>
+    </div>
+
+    <!-- 单词卡：键盘聚焦态 = 蓝框 + 实心★（autofocus 模拟 Tab 切到按钮） -->
+    <section class="quiz-card" id="quiz">
+      <div class="progress" id="progress">第 1 / 10 词</div>
+      <div class="word-head">
+        <button class="fav-btn faved" id="favBtn" type="button" aria-label="取消收藏 respond" autofocus>
+          <span class="star-empty">☆</span><span class="star-full">★</span>
+        </button>
+      </div>
+      <div class="word-display" id="word">respond</div>
+      <div class="phonetic" id="phonetic">/rɪˈspɒnd/</div>
+      <div class="options" id="options">
+        <button class="option-btn"><span class="pos-tag V">V.</span>回应；回答</button>
+        <button class="option-btn"><span class="pos-tag N">N.</span>回应</button>
+        <button class="option-btn"><span class="pos-tag N">N.</span>尊重；方面</button>
+        <button class="option-btn"><span class="pos-tag N">N.</span>保留；预定</button>
+      </div>
+      <div class="feedback" id="feedback"></div>
+      <button class="next-btn" id="nextBtn" style="display:none"></button>
+      <p class="focus-tip">↑ 蓝框＝当前键盘焦点在收藏按钮上；按 回车/空格 即触发收藏（无需鼠标）</p>
+    </section>
+  </main>
+</body>
+</html>

@@ -94,6 +94,7 @@
     phoneticEl.textContent = t.phonetic || "";
     // 收藏按钮：反映当前词的收藏状态，点击切换
     favBtn.classList.toggle("faved", CET4.isFavorite(t.word));
+    favBtn.setAttribute("aria-label", (CET4.isFavorite(t.word) ? "取消收藏 " : "收藏 ") + t.word);
     favBtn.onclick = function () { toggleFav(t.word); };
     feedbackEl.textContent = "";
     feedbackEl.className = "feedback";

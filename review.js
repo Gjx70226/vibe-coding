@@ -95,6 +95,7 @@
     phoneticEl.textContent = "";        // 复习页不提前暴露音标（避免泄底）
     // 收藏按钮：针对当前英文词，反映收藏状态
     favBtn.classList.toggle("faved", CET4.isFavorite(word));
+    favBtn.setAttribute("aria-label", (CET4.isFavorite(word) ? "取消收藏 " : "收藏 ") + word);
     favBtn.onclick = function () { toggleFav(word); };
     feedbackEl.textContent = "";
     feedbackEl.className = "feedback";
