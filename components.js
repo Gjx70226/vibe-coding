@@ -69,6 +69,58 @@
     t._timer = setTimeout(function () { t.className = "ui-toast"; }, 1600);
   }
 
+  // ============================================================
+  // 页面四态公共零件（Day 14 架构升级第 1 步：从四个页面抽出来的共用零件）
+  // 约定：任何页面里放好这几个盒子就行——
+  //   #loading    转圈
+  //   #content    正文
+  //   #errorBox   出错红条
+  //   （空状态块各自 id 不同，用 pageEmpty(盒子的 id) 指出即可）
+  // 用法：刚开始转圈 UI.pageLoading()；内容出来 UI.pageReady()；
+  //       出错 UI.pageError()；要显示一块空提示 UI.pageEmpty("盒子id", "提示文字")
+  // 好处：转圈/红条的样式和切换只在这一处，改一次四个页面全生效。
+  // ============================================================
+
+  // 内部小工具：把某个盒子藏起来（hidden=true）或露出来（hidden=false）
+  function setHidden(id, hidden) {
+    var b = document.getElementById(id);
+    if (b) b.hidden = hidden;
+  }
+
+  // 加载中：只显示转圈，正文和红条都藏起
+  function pageLoading() {
+    setHidden("loading", false);
+    setHidden("content", true);
+    setHidden("errorBox", true);
+  }
+
+  // 内容出来：藏转圈、藏红条、露出正文（成功态和空态都走这一步）
+  function pageReady() {
+    setHidden("loading", true);
+    setHidden("content", false);
+    setHidden("errorBox", true);
+  }
+
+  // 出错：藏转圈和正文，露出红条（红条上自带「重试」按钮）
+  function pageError() {
+    setHidden("loading", true);
+    setHidden("content", true);
+    setHidden("errorBox", false);
+  }
+
+  // 空状态：把某一块提示显示出来
+  // 传了 html 就顺便把内容塞进去；不传就只显示页面里本来就有的一块
+  // 例：UI.pageEmpty("homeEmpty") 或 UI.pageEmpty("", "<div class='empty-box'>还没有记录</div>")
+  function pageEmpty(boxId, html) {
+    var box = boxId ? document.getElementById(boxId) : null;
+    if (box && html) box.innerHTML = html;
+    if (box) box.hidden = false;
+  }
+
   // 对外暴露
-  global.UI = { el: el, statCard: statCard, wordRow: wordRow, renderList: renderList, card: card, toast: toast };
+  global.UI = {
+    el: el, statCard: statCard, wordRow: wordRow, renderList: renderList,
+    card: card, toast: toast,
+    pageLoading: pageLoading, pageReady: pageReady, pageError: pageError, pageEmpty: pageEmpty
+  };
 })(window);

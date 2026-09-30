@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
+<html lang="zh-CN"><head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>新词学习 · 四级备考助手</title>
@@ -14,40 +13,40 @@
   <!-- 顶部胶囊导航：三个页面互相跳 -->
   <nav class="pill-nav">
     <a href="index.html" data-page="index">首页</a>
-    <a href="study.html" data-page="study">新词学习</a>
+    <a href="study.html" data-page="study" class="active">新词学习</a>
     <a href="review.html" data-page="review">错题复习</a>
   </nav>
 
   <main class="container">
     <!-- 加载中转圈（四态之"加载中"） -->
-    <div class="loading" id="loading"><div class="spinner"></div><span>加载中…</span></div>
+    <div class="loading" id="loading" hidden=""><div class="spinner"></div><span>加载中…</span></div>
 
-    <div id="content" hidden>
+    <div id="content">
     <!-- 答题卡片 -->
     <section class="quiz-card" id="quiz">
-      <div class="progress" id="progress"></div>
+      <div class="progress" id="progress">第 1 / 10 词</div>
       <div class="word-head has-detail">
-        <a class="word-detail" id="detailLink" href="#">详情</a>
-        <button class="fav-btn" id="favBtn" type="button" aria-label="收藏单词">
+        <a class="word-detail" id="detailLink" href="detail.html?word=plenty">详情</a>
+        <button class="fav-btn" id="favBtn" type="button" aria-label="收藏 plenty">
           <span class="star-empty">☆</span><span class="star-full">★</span>
         </button>
       </div>
-      <div class="word-display" id="word"></div>
-      <div class="phonetic" id="phonetic"></div>
-      <div class="options" id="options"></div>
+      <div class="word-display" id="word">plenty</div>
+      <div class="phonetic" id="phonetic">/ˈplenti/</div>
+      <div class="options" id="options"><button class="option-btn"><span class="pos-tag N">N.</span>贫困；贫乏</button><button class="option-btn"><span class="pos-tag ADV">ADV.</span>明白地；朴素地</button><button class="option-btn"><span class="pos-tag N">N.</span>充足的；大量的</button><button class="option-btn"><span class="pos-tag V">V.</span>高兴的；满意的</button></div>
       <div class="feedback" id="feedback"></div>
       <button class="next-btn" id="nextBtn" style="display:none"></button>
     </section>
 
     <!-- 空状态：词库未加载/异常时显示，避免白屏 -->
-    <div class="empty-box" id="studyEmpty" hidden>⚠️ 词库加载异常，请刷新页面重试</div>
+    <div class="empty-box" id="studyEmpty" hidden="">⚠️ 词库加载异常，请刷新页面重试</div>
 
     <!-- 一轮结束的结果卡片（默认隐藏） -->
     <section class="result-card" id="result" style="display:none"></section>
     </div><!-- /#content -->
 
     <!-- 出错状态：模拟加载失败时显示红条+重试（四态之"出错"） -->
-    <div class="error-box" id="errorBox" hidden>
+    <div class="error-box" id="errorBox" hidden="">
       <div class="err-icon">⚠️</div>
       <div class="err-text">加载失败，请检查网络后重试</div>
       <button class="retry-btn" id="retryBtn" type="button">重试</button>
@@ -60,5 +59,6 @@
   <script src="words.js"></script>
   <script src="app.js"></script>
   <script src="study.js"></script>
-</body>
-</html>
+
+
+</body></html>

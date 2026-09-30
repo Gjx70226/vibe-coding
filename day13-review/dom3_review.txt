@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
+<html lang="zh-CN"><head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>错题复习 · 四级备考助手</title>
@@ -13,14 +12,14 @@
   <nav class="pill-nav">
     <a href="index.html" data-page="index">首页</a>
     <a href="study.html" data-page="study">新词学习</a>
-    <a href="review.html" data-page="review">错题复习</a>
+    <a href="review.html" data-page="review" class="active">错题复习</a>
   </nav>
 
   <main class="container">
     <!-- 加载中转圈（四态之"加载中"） -->
-    <div class="loading" id="loading"><div class="spinner"></div><span>加载中…</span></div>
+    <div class="loading" id="loading" hidden=""><div class="spinner"></div><span>加载中…</span></div>
 
-    <div id="content" hidden>
+    <div id="content">
     <header class="hero">
       <h1>错题复习 <span class="heart">🔁</span></h1>
       <p class="subtitle">看中文释义，选出正确英文单词；答对即移出待复习</p>
@@ -29,16 +28,16 @@
     <section class="card word-list-card" id="wrongListCard">
       <div class="list-head">
         <span class="section-title">错题清单</span>
-        <span class="count-badge" id="wrongCount"></span>
+        <span class="count-badge" id="wrongCount">0 个</span>
       </div>
       <div class="search-box">
         <input type="text" id="searchInput" class="search-input" placeholder="搜英文或中文释义…" aria-label="搜索错题">
       </div>
       <div id="wrongList" class="wrong-list"></div>
-      <div id="wrongEmpty" class="empty-box" style="display:none;"></div>
+      <div id="wrongEmpty" class="empty-box" style="display: block;">还没有错题记录，去「新词学习」背几个词吧</div>
     </section>
 
-    <section class="quiz-card" id="quiz">
+    <section class="quiz-card" id="quiz" style="display: none;">
       <div class="progress" id="progress"></div>
       <div class="word-head">
         <button class="fav-btn" id="favBtn" type="button" aria-label="收藏单词">
@@ -52,11 +51,11 @@
       <button class="next-btn" id="nextBtn" style="display:none"></button>
     </section>
 
-    <section class="result-card" id="result" style="display:none"></section>
+    <section class="result-card" id="result" style="display: block;"><h2>🎉 错题都复习完啦</h2><p>当前没有待复习的错题。<br>去「新词学习」多积累一些吧。</p><a class="next-btn" href="index.html" style="text-decoration:none;display:inline-block;margin-top:18px">返回首页</a></section>
     </div><!-- /#content -->
 
     <!-- 出错状态：模拟加载失败时显示红条+重试（四态之"出错"） -->
-    <div class="error-box" id="errorBox" hidden>
+    <div class="error-box" id="errorBox" hidden="">
       <div class="err-icon">⚠️</div>
       <div class="err-text">加载失败，请检查网络后重试</div>
       <button class="retry-btn" id="retryBtn" type="button">重试</button>
@@ -69,5 +68,6 @@
   <script src="words.js"></script>
   <script src="app.js"></script>
   <script src="review.js"></script>
-</body>
-</html>
+
+
+</body></html>

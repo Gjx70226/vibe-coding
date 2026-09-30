@@ -1,236 +1,64 @@
-// app.js —— 四级备考助手脚本
-// 当前已含：导航高亮 + 本地存储层（cet4_stats/cet4_wrong/cet4_learned）+ 首页渲染 + 跨天清零
-// 背词/复习逻辑在第③④步接入，会调用本文件暴露的 window.CET4 接口
+// app.js —— 首页：导航高亮 + 四个数字渲染 + 加载/空/出错三态
+// ===== 今日问题：app.js 现在该管什么？ =====
+// 答：只管"首页怎么显示"。数据读写全部收进 store.js，本文件不碰浏览器存储。
+// 理由三条：① 首页只关心"把四个数字画出来"，不该知道数据存在哪；
+//           ② 存数据的地方只有一个（store.js），以后换云端只改那一个文件；
+//           ③ 页面层喊功能名（Store.summary()）喊惯了，就再也不会各写一份存储逻辑。
+// ===== 今日边界（不做）：不做数据存储（归 store.js）、不做词库逻辑（归 words.js）
+// 依赖：Store（数据，见 store.js）、UI（转圈/空/出错公共零件，见 components.js）
 
 // ===== 1. 导航高亮：根据当前页面给对应导航项加 active =====
 (function () {
   var path = window.location.pathname;
   var page = "index";
-  if (path.includes("study.html")) page = "study";
-  else if (path.includes("review.html")) page = "review";
+  if (path.indexOf("study.html") !== -1) page = "study";
+  else if (path.indexOf("review.html") !== -1) page = "review";
 
   var links = document.querySelectorAll(".pill-nav a");
-  links.forEach(function (el) {
+  Array.prototype.forEach.call(links, function (el) {
     if (el.getAttribute("data-page") === page) el.classList.add("active");
   });
 })();
 
-// ===== 2. 本地存储层 =====
-var CET4 = (function () {
-  var KEY_STATS = "cet4_stats";
-  var KEY_WRONG = "cet4_wrong";
-  var KEY_LEARNED = "cet4_learned";
-  var KEY_FAV = "cet4_favorites"; // 收藏词列表
-
-  // 今天日期字符串 YYYY-MM-DD（用于跨天判断）
-  function todayStr() {
-    var d = new Date();
-    var m = String(d.getMonth() + 1).padStart(2, "0");
-    var day = String(d.getDate()).padStart(2, "0");
-    return d.getFullYear() + "-" + m + "-" + day;
-  }
-
-  function defaultStats() {
-    return { todayDate: todayStr(), todayNew: 0, totalLearned: 0, correct: 0, totalAnswered: 0 };
-  }
-
-  // 读取汇总统计，并在读取时自动做跨天清零
-  function getStats() {
-    var s;
-    try {
-      s = JSON.parse(localStorage.getItem(KEY_STATS));
-    } catch (e) {
-      s = null;
-    }
-    if (!s) s = defaultStats();
-
-    // 跨天清零：记录的日期不是今天，则今日新学归零、日期更新为今天
-    if (s.todayDate !== todayStr()) {
-      s.todayNew = 0;
-      s.todayDate = todayStr();
-      saveStats(s);
-    }
-    return s;
-  }
-
-  function saveStats(s) {
-    localStorage.setItem(KEY_STATS, JSON.stringify(s));
-  }
-
-  function getWrong() {
-    try {
-      return JSON.parse(localStorage.getItem(KEY_WRONG)) || [];
-    } catch (e) {
-      return [];
-    }
-  }
-  function saveWrong(arr) {
-    localStorage.setItem(KEY_WRONG, JSON.stringify(arr));
-  }
-
-  function getLearned() {
-    try {
-      return JSON.parse(localStorage.getItem(KEY_LEARNED)) || [];
-    } catch (e) {
-      return [];
-    }
-  }
-  function saveLearned(arr) {
-    localStorage.setItem(KEY_LEARNED, JSON.stringify(arr));
-  }
-
-  // 待复习数量 = 错题本里 status 为 pending 的条数
-  function pendingCount() {
-    return getWrong().filter(function (w) { return w.status === "pending"; }).length;
-  }
-
-  // 首页四个数字
-  function summary() {
-    var s = getStats();
-    var acc = s.totalAnswered > 0 ? Math.round((s.correct / s.totalAnswered) * 100) : 0;
-    return {
-      todayNew: s.todayNew,
-      pending: pendingCount(),
-      totalLearned: s.totalLearned,
-      accuracy: acc
-    };
-  }
-
-  // 把四个数字写到首页卡片（元素不存在则跳过，兼容学习/复习页）
-  function renderSummary() {
-    var data = {
-      "stat-today": summary().todayNew,
-      "stat-review": summary().pending,
-      "stat-total": summary().totalLearned,
-      "stat-acc": summary().accuracy + "%"
-    };
-    Object.keys(data).forEach(function (id) {
-      var el = document.getElementById(id);
-      if (el) el.textContent = data[id];
-    });
-  }
-
-  // ===== 写入接口（供第③④步调用） =====
-
-  // 记录一次新词作答：每做一次 todayNew+1；对错都计入答题数；首次学的词累计+1；答错进错题本
-  function recordNewWord(word, isCorrect) {
-    var s = getStats();
-    s.todayNew += 1;
-    s.totalAnswered += 1;
-    if (isCorrect) s.correct += 1;
-
-    var learned = getLearned();
-    if (learned.indexOf(word) === -1) {
-      learned.push(word);
-      s.totalLearned += 1;
-      saveLearned(learned);
-    }
-    saveStats(s);
-
-    if (!isCorrect) addWrong(word);
-  }
-
-  // 答错进错题本（已存在 pending 的不重复加）
-  function addWrong(word) {
-    var wrong = getWrong();
-    var exists = wrong.some(function (w) { return w.word === word && w.status === "pending"; });
-    if (!exists) {
-      wrong.push({ word: word, status: "pending" });
-      saveWrong(wrong);
-    }
-  }
-
-  // 记录一次错题复习：答对则从待复习移除（status 改为 mastered）
-  function recordWrongReview(word, isCorrect) {
-    var s = getStats();
-    s.totalAnswered += 1;
-    if (isCorrect) s.correct += 1;
-    saveStats(s);
-
-    if (isCorrect) markMastered(word);
-  }
-
-  function markMastered(word) {
-    var wrong = getWrong().map(function (w) {
-      return w.word === word ? { word: w.word, status: "mastered" } : w;
-    });
-    saveWrong(wrong);
-  }
-
-  // ===== 收藏功能（Day 11 新增，独立 key，不影响判题/记账） =====
-  function getFavorites() {
-    try { return JSON.parse(localStorage.getItem(KEY_FAV)) || []; }
-    catch (e) { return []; }
-  }
-  function saveFavorites(arr) {
-    localStorage.setItem(KEY_FAV, JSON.stringify(arr));
-  }
-  // 是否已收藏
-  function isFavorite(word) {
-    return getFavorites().indexOf(word) !== -1;
-  }
-  // 切换收藏状态，成功返回新状态（true=已收藏）；localStorage 异常时抛错，由调用方兜底
-  function toggleFavorite(word) {
-    var f = getFavorites();
-    var i = f.indexOf(word);
-    var nowFav;
-    if (i === -1) { f.push(word); nowFav = true; }
-    else { f.splice(i, 1); nowFav = false; }
-    saveFavorites(f);
-    return nowFav;
-  }
-
-  // 暴露接口
-  return {
-    summary: summary,
-    renderSummary: renderSummary,
-    recordNewWord: recordNewWord,
-    recordWrongReview: recordWrongReview,
-    getStats: getStats,
-    getWrong: getWrong,
-    getLearned: getLearned,
-    getFavorites: getFavorites,
-    isFavorite: isFavorite,
-    toggleFavorite: toggleFavorite
+// ===== 2. 首页渲染：把 Store 里的四个数字画到卡片上 =====
+function renderSummary() {
+  var s = Store.summary();
+  var data = {
+    "stat-today": s.todayNew,
+    "stat-review": s.pending,
+    "stat-total": s.totalLearned,
+    "stat-acc": s.accuracy + "%"
   };
-})();
-
-// 挂到全局，方便 F12 控制台测试和后续步骤调用
-window.CET4 = CET4;
-
-// ===== 3. 首页加载即渲染四个数字 =====
-// Day 13 步骤1：先显示"加载中"转圈，延迟 400ms 再渲染内容（四态之"加载中"）
-function hideLoading() {
-  var l = document.getElementById("loading");
-  var c = document.getElementById("content");
-  if (l) l.hidden = true;
-  if (c) c.hidden = false;
+  Object.keys(data).forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = data[id];
+  });
 }
+
+// 全新用户（啥都没学）时给个引导，而不是干巴巴四个 0
 function maybeHomeEmpty() {
   var el = document.getElementById("homeEmpty");
   if (!el) return;
   var forceEmpty = new URLSearchParams(location.search).get("simempty") === "1";
-  var s = CET4.summary();
+  var s = Store.summary();
   var isEmpty = forceEmpty || (s.todayNew === 0 && s.pending === 0 && s.totalLearned === 0);
   el.hidden = !isEmpty;
 }
 
-function showError() {
-  var l = document.getElementById("loading");
-  var c = document.getElementById("content");
-  var e = document.getElementById("errorBox");
-  if (l) l.hidden = true;
-  if (c) c.hidden = true;
-  if (e) e.hidden = false;
-}
+// 挂在全局方便 F12 控制台测试；数据接口请用 Store，这里只放渲染
+window.CET4 = {
+  renderSummary: renderSummary,
+  summary: Store.summary
+};
 
+// ===== 3. 四态流程：正常 / 出错 =====
 function runNormal() {
-  hideLoading();
-  CET4.renderSummary();
+  UI.pageReady();
+  renderSummary();
   maybeHomeEmpty();
 }
 
-// 重试按钮：隐藏红条，重新走正常流程（演示：忽略模拟错误）
+// 重试按钮：隐藏红条，重新走正常流程（演示用，忽略模拟错误）
 var retryBtn = document.getElementById("retryBtn");
 if (retryBtn) retryBtn.addEventListener("click", function () {
   var e = document.getElementById("errorBox");
@@ -240,6 +68,6 @@ if (retryBtn) retryBtn.addEventListener("click", function () {
 
 setTimeout(function () {
   var simError = new URLSearchParams(location.search).get("simerror") === "1";
-  if (simError) showError();
+  if (simError) UI.pageError();
   else runNormal();
 }, 400);

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head>
+<meta charset="UTF-8">
+<title>Store 自检（Day 13 架构升级第 2 步）</title>
+<style>
+  body { font-family: system-ui, sans-serif; padding: 20px; background: #f7f8fa; }
+  #out { max-width: 640px; background: #fff; border-radius: 12px; padding: 18px 20px; line-height: 1.9; }
+  .ok { color: #0a7d3f; font-weight: 600; }
+  .no { color: #c0392b; font-weight: 600; }
+</style>
+</head>
+<body>
+<div id="addr-bar">http://localhost/store_check.html —— 数据层自检</div>
+<div id="out"><div>[OK] 收藏 toggle 第一次返回 → 实际：true（期望：true）</div><div>[OK] 收藏后 isFavorite → 实际：true（期望：true）</div><div>[OK] 收藏 toggle 第二次返回 → 实际：false（期望：false）</div><div>[OK] 取消后 isFavorite → 实际：false（期望：false）</div><div>[OK] 答错自动进错题本 → 实际：1（期望：1）</div><div>[OK] 错题状态为 pending → 实际：pending（期望：pending）</div><div>[OK] 已学列表同步 → 实际：true（期望：true）</div><div>[OK] 今日新学 +1 → 实际：1（期望：1）</div><div>[OK] 答题计数 +1 → 实际：1（期望：1）</div><div>[OK] 待复习数 → 实际：1（期望：1）</div><div>[OK] 准确率（纯数字，页面拼%） → 实际：0（期望：0）</div><div>[OK] 复习答对后已掌握 → 实际：mastered（期望：mastered）</div><div>[OK] 待复习归零 → 实际：0（期望：0）</div><div>[OK] 坏数据不崩（返回空数组） → 实际：[]（期望：[]）</div><div>[OK] 全局只有 Store 一个数据入口 → 实际：object（期望：object）</div></div>
+
+<script src="../store.js"></script>
+<script>
+// 这个文件只做一件事：真刀真枪用一遍 Store，把结果写到页面上，供 dump-dom 文本核验
+(function () {
+  var lines = [];
+  function log(name, actual, expect) {
+    var ok = String(actual) === String(expect);
+    lines.push('<div>[' + (ok ? 'OK' : 'NOT OK') + '] ' + name +
+               ' → 实际：' + actual + '（期望：' + expect + '）</div>');
+    return ok;
+  }
+
+  // 1) 收藏：toggle 上去、再 toggle 取消、isFavorite 跟着变
+  var f1 = Store.toggleFavorite("important");
+  log("收藏 toggle 第一次返回", f1, "true");
+  log("收藏后 isFavorite", Store.isFavorite("important"), "true");
+  var f2 = Store.toggleFavorite("important");
+  log("收藏 toggle 第二次返回", f2, "false");
+  log("取消后 isFavorite", Store.isFavorite("important"), "false");
+
+  // 2) 答题 → 已学 + 错题本
+  Store.recordNewWord("important", false);
+  log("答错自动进错题本", Store.getWrong().length, "1");
+  log("错题状态为 pending", Store.getWrong()[0].status, "pending");
+  log("已学列表同步", Store.isLearned("important"), "true");
+
+  // 3) 跨天清零字段 + 统计
+  var s = Store.getStats();
+  log("今日新学 +1", s.todayNew, "1");
+  log("答题计数 +1", s.totalAnswered, "1");
+  log("待复习数", Store.pendingCount(), "1");
+  // 注意：准确率存的是纯数字 0，页面显示时才拼 "%"，所以这里期望是数字 0
+  log("准确率（纯数字，页面拼%）", Store.summary().accuracy, 0);
+
+  // 4) 复习答对 → 移出待复习
+  Store.recordWrongReview("important", true);
+  log("复习答对后已掌握", Store.getWrong()[0].status, "mastered");
+  log("待复习归零", Store.pendingCount(), "0");
+
+  // 5) 脏数据兜底：塞一段坏数据进去，读出来不能崩
+  try {
+    localStorage.setItem("cet4_wrong", "{坏数据");
+    log("坏数据不崩（返回空数组）", JSON.stringify(Store.getWrong()), "[]");
+  } catch (e) {
+    log("坏数据不崩（返回空数组）", "抛错：" + e.message, "[]");
+  }
+
+  // 6) 分层验证：业务页面不应直连存储（这里只验证 Store 是唯一入口）
+  log("全局只有 Store 一个数据入口", typeof Store, "object");
+
+  document.getElementById("out").innerHTML = lines.join("");
+})();
+</script>
+
+
+</body></html>

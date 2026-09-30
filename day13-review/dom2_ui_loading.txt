@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<title>公共零件自检</title>
+</head>
+<body style="font-family:system-ui;padding:20px;">
+<div id="loading">转圈中…</div>
+<div id="content" hidden="">正文内容</div>
+<div class="error-box" id="errorBox" hidden="">出错红条</div>
+<div id="boxA" hidden="">空状态块</div>
+<pre id="log">fn=pageLoading | loading.hidden=false content.hidden=true errorBox.hidden=true boxA.hidden=true</pre>
+<script src="../components.js"></script>
+<script>
+(function () {
+  var fn = new URLSearchParams(location.search).get("fn") || "pageReady";
+  if (fn === "pageLoading") UI.pageLoading();
+  else if (fn === "pageError") UI.pageError();
+  else if (fn === "pageEmpty") UI.pageEmpty("boxA", "<b>空提示文字</b>");
+  else UI.pageReady();
+  // 把最终结果写进页面，便于导出校验
+  document.getElementById("log").textContent =
+    "fn=" + fn +
+    " | loading.hidden=" + document.getElementById("loading").hidden +
+    " content.hidden=" + document.getElementById("content").hidden +
+    " errorBox.hidden=" + document.getElementById("errorBox").hidden +
+    " boxA.hidden=" + document.getElementById("boxA").hidden;
+})();
+</script>
+
+
+</body></html>

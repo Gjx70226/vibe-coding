@@ -44,7 +44,7 @@
 
   // 当前待复习错题（status=pending）的英文词列表
   function pendingWords() {
-    return CET4.getWrong()
+    return Store.getWrong()
       .filter(function (w) { return w.status === "pending"; })
       .map(function (w) { return w.word; });
   }
@@ -82,7 +82,7 @@
     favBtn.disabled = true;
     setTimeout(function () { favBtn.disabled = false; }, 100);
     try {
-      var nowFav = CET4.toggleFavorite(word);
+      var nowFav = Store.toggleFavorite(word);
       favBtn.classList.toggle("faved", nowFav);
       UI.toast(nowFav ? "⭐ 已收藏" : "已取消收藏", "ok");
     } catch (e) {
@@ -99,8 +99,8 @@
     wordEl.textContent = t.meaning;     // 题干显示中文
     phoneticEl.textContent = "";        // 复习页不提前暴露音标（避免泄底）
     // 收藏按钮：针对当前英文词，反映收藏状态
-    favBtn.classList.toggle("faved", CET4.isFavorite(word));
-    favBtn.setAttribute("aria-label", (CET4.isFavorite(word) ? "取消收藏 " : "收藏 ") + word);
+    favBtn.classList.toggle("faved", Store.isFavorite(word));
+    favBtn.setAttribute("aria-label", (Store.isFavorite(word) ? "取消收藏 " : "收藏 ") + word);
     favBtn.onclick = function () { toggleFav(word); };
     feedbackEl.textContent = "";
     feedbackEl.className = "feedback";
@@ -140,7 +140,7 @@
     feedbackEl.className = "feedback " + (correct ? "ok" : "no");
 
     // 记账（步骤②）：答对 → 标记掌握（移出待复习）；答错 → 保留
-    CET4.recordWrongReview(targetWord, correct);
+    Store.recordWrongReview(targetWord, correct);
 
     nextBtn.textContent = (idx < queue.length - 1) ? "下一词 →" : "查看结果 →";
     nextBtn.style.display = "inline-block";
@@ -187,7 +187,7 @@
   // ===== Day 12：错题清单 + 关键词搜索（筛选交互） =====
   // 把错题本整理成「英文 + 中文 + 掌握状态」的行数据
   function buildWrongRows() {
-    return CET4.getWrong().map(function (w) {
+    return Store.getWrong().map(function (w) {
       var t = wordMap[w.word];
       return { word: w.word, meaning: t ? t.meaning : "", status: w.status };
     });
@@ -241,37 +241,21 @@
   // 输入框即时过滤（三种测试：有结果 / 无结果 / 清空恢复）
   searchInput.addEventListener("input", updateWrongList);
 
-  // Day 13 步骤1：先显示"加载中"转圈，延迟 400ms 再渲染（四态之"加载中"）
-  function hideLoading() {
-    var l = document.getElementById("loading");
-    var c = document.getElementById("content");
-    if (l) l.hidden = true;
-    if (c) c.hidden = false;
-  }
-  // 出错状态：隐藏加载/内容，显示红条（四态之"出错"）
-  function showError() {
-    var l = document.getElementById("loading");
-    var c = document.getElementById("content");
-    var e = document.getElementById("errorBox");
-    if (l) l.hidden = true;
-    if (c) c.hidden = true;
-    if (e) e.hidden = false;
-  }
-
+  // 转圈 / 正文 / 出错红条的切换改用公共零件 UI.pageLoading / UI.pageReady / UI.pageError
   // 重试：隐藏红条，重新渲染清单与答题（演示用，忽略模拟错误）
   var retryBtn = document.getElementById("retryBtn");
   if (retryBtn) retryBtn.addEventListener("click", function () {
     var e = document.getElementById("errorBox");
-    if (e) e.hidden = true;
-    hideLoading();
-    updateWrongList();
-    start();
-  });
+  if (e) e.hidden = true;
+  UI.pageReady();
+  updateWrongList();
+  start();
+});
 
   setTimeout(function () {
     var simError = new URLSearchParams(location.search).get("simerror") === "1";
-    if (simError) { showError(); return; }
-    hideLoading();
+    if (simError) { UI.pageError(); return; }
+    UI.pageReady();
     updateWrongList();
     start();
   }, 400);

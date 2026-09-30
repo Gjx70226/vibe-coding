@@ -1,37 +1,17 @@
 // detail.js —— 单词详情页逻辑（Day 13 板块三步骤5）
 // 打开方式：detail.html?word=abandon
 // 自己控制四态（加载中/成功/空/出错），不依赖 app.js，保持本文件独立可读
-// 收藏状态、学习状态直接读 app.js 用的同一个 localStorage key，保证数据一致
+// 收藏状态、学习状态只问 Store（数据层），本文件不碰 localStorage，保证数据一致
 
 (function () {
-  var loading = document.getElementById("loading");
+  // 只用 content 这一块正文容器（其余盒子由公共零件 UI 统一管理）
   var content = document.getElementById("content");
-  var errorBox = document.getElementById("errorBox");
 
-  // 显示内容、隐藏转圈
-  function hideLoading() {
-    if (loading) loading.hidden = true;
-    if (content) content.hidden = false;
-  }
-  // 出错：隐藏转圈和内容，显示红条
-  function showError() {
-    if (loading) loading.hidden = true;
-    if (content) content.hidden = true;
-    if (errorBox) errorBox.hidden = false;
-  }
+  // 转圈 / 正文 / 出错红条的切换改用公共零件 UI.pageLoading / UI.pageReady / UI.pageError
 
-  // 读收藏（与 app.js 用同一个 key：cet4_favorites）
-  function isFavorite(word) {
-    try {
-      return (JSON.parse(localStorage.getItem("cet4_favorites")) || []).indexOf(word) !== -1;
-    } catch (e) { return false; }
-  }
-  // 读是否学过（与 app.js 用同一个 key：cet4_learned）
-  function isLearned(word) {
-    try {
-      return (JSON.parse(localStorage.getItem("cet4_learned")) || []).indexOf(word) !== -1;
-    } catch (e) { return false; }
-  }
+  // 收藏 / 是否已学：只问 Store，不再自己翻浏览器存储（分层要治的最大的坑）
+  function isFavorite(word) { return Store.isFavorite(word); }
+  function isLearned(word) { return Store.isLearned(word); }
 
   var params = new URLSearchParams(location.search);
   var word = params.get("word") || "";
@@ -75,9 +55,7 @@
 
   // 空状态：查不到这个词时（四态之"空"），不用模拟开关，真实查不到即触发
   function showEmpty() {
-    if (loading) loading.hidden = true;
-    if (content) content.hidden = false;
-    if (errorBox) errorBox.hidden = true;
+    UI.pageReady();
     content.innerHTML =
       '<a class="back-link" href="review.html">← 返回</a>' +
       '<div class="empty-box" style="padding:40px 20px;">没有找到「' +
@@ -89,7 +67,7 @@
   var retryBtn = document.getElementById("retryBtn");
   if (retryBtn) retryBtn.addEventListener("click", function () {
     if (errorBox) errorBox.hidden = true;
-    hideLoading();
+    UI.pageReady();
     render();
   });
 
@@ -102,7 +80,7 @@
 
   // 入口：先转圈 400ms，再按状态分流
   setTimeout(function () {
-    if (simError) showError();
-    else { hideLoading(); render(); }
+    if (simError) UI.pageError();
+    else { UI.pageReady(); render(); }
   }, 400);
 })();
