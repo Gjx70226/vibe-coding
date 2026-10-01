@@ -12,6 +12,8 @@
     "/": "home",
     "/study": "study",
     "/review": "review",
+    "/daily": "daily",
+    "/list": "list",
     "/detail": "detail"
   };
 
@@ -19,6 +21,8 @@
     home: "HomeView",
     study: "StudyView",
     review: "ReviewView",
+    daily: "DailyView",
+    list: "ListView",
     detail: "DetailView"
   };
 

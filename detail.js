@@ -47,7 +47,6 @@
           '<div class="empty-box" style="padding:40px 20px;">没有找到「' +
           (word || "空") +
           '」这个词<br>请检查单词拼写，或从列表重新点入</div>';
-        UI.initA11y("单词详情", "没找到这个词");
         return;
       }
 
@@ -66,9 +65,6 @@
       document.getElementById("dFav").textContent = Store.isFavorite(t.word) ? "★ 已收藏" : "☆ 未收藏";
       document.getElementById("dRank").textContent = "#" + found.rank + " / 共 " + WORDS.length + " 词";
       document.getElementById("dLearned").textContent = Store.isLearned(t.word) ? "已学习" : "还没学过";
-
-      // 无障碍：焦点落正文 + 读屏念「已进入：单词详情：important」
-      UI.initA11y("单词详情", t.word);
     }
   };
 })();

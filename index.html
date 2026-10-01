@@ -19,6 +19,7 @@
     <a href="#/" data-route="home">首页</a>
     <a href="#/study" data-route="study">新词学习</a>
     <a href="#/review" data-route="review">错题复习</a>
+    <a href="#/daily" data-route="daily">每日复习</a>
   </nav>
 
   <main class="container" id="main" tabindex="-1">
@@ -36,16 +37,16 @@
     </div>
   </main>
 
-  <!-- 切页播报腔：读屏软件会念这里的一句话（眼睛看不见） -->
-  <div id="srLive" class="sr-only" aria-live="polite" aria-atomic="true"></div>
-
   <!-- 先引入词库与公共层，再引入四个视图，最后引入路由（顺序不能反） -->
   <script src="components.js"></script>
   <script src="store.js"></script>
   <script src="words.js"></script>
+  <script src="quiz.js"></script>     <!-- 答题卡公共零件（学习/复习/每日三处共用） -->
   <script src="app.js"></script>      <!-- 首页视图 HomeView -->
   <script src="study.js"></script>    <!-- 学习视图 StudyView -->
   <script src="review.js"></script>   <!-- 复习视图 ReviewView -->
+  <script src="daily.js"></script>    <!-- 每日复习视图 DailyView -->
+  <script src="list.js"></script>     <!-- 词表统计视图 ListView -->
   <script src="detail.js"></script>   <!-- 详情视图 DetailView -->
   <script src="router.js"></script>   <!-- 最后启动路由 -->
 </body>

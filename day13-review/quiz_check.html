@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>自检运行中</title></head>
+<body>
+<div id="box"></div>
+<pre id="out">还没跑</pre>
+<script src="../components.js"></script>
+<script src="../store.js"></script>
+<script src="../words.js"></script>
+<script src="../quiz.js"></script>
+<script>
+// 自检：答题卡的重试 3 次 / 逐词统计 / 错题入库 / 进度保存，全部真实点按钮验证
+var log = [];
+function ok(name, cond, extra) { log.push((cond ? "PASS" : "FAIL") + "｜" + name + (extra ? "｜" + extra : "")); }
+try {
+  localStorage.clear();
+  var target = "important";
+  var t = null;
+  WORDS.forEach(function (w) { if (w.word === target) t = w; });
+
+  Quiz.mount(document.getElementById("box"), {
+    mode: "new", kind: "en2zh", words: [target, "below"], pool: WORDS,
+    onAnswer: function (word, correct, tries, stat, idx) {
+      Store.saveProgress({ words: [target, "below"], idx: idx, correct: 0 });
+    },
+    onFinish: function () {}
+  });
+
+  var btns = document.querySelectorAll("#qOptions .option-btn");
+  var wrongIdx = -1, rightIdx = -1;
+  for (var i = 0; i < btns.length; i++) {
+    var txt = btns[i].textContent;
+    if (rightIdx < 0 && txt.indexOf(t.meaning) !== -1) rightIdx = i;
+    if (wrongIdx < 0 && txt.indexOf(t.meaning) === -1) wrongIdx = i;
+  }
+  ok("出题给 4 个选项", btns.length === 4, "实际 " + btns.length);
+
+  // —— 第一次选错：只提示"错了"，不给答案，允许继续选 ——
+  btns[wrongIdx].click();
+  var fb = document.getElementById("qFeedback");
+  ok("错一次只提示还能试几次", /还能试 2 次/.test(fb.textContent), fb.textContent);
+  ok("错一次不显示正确答案", fb.textContent.indexOf("正确答案") === -1);
+  ok("选错的按钮被划掉", btns[wrongIdx].classList.contains("wrong-tried"));
+  ok("错一次就记入错题本", Store.getWrong().length === 1 && Store.getWrong()[0].word === target);
+  ok("逐词错次=1", Store.getCount(target).wrong === 1, JSON.stringify(Store.getCount(target)));
+  ok("提示了错过次数", /已记入错题本/.test(document.getElementById("qStat").textContent));
+
+  // —— 第二次选对：定局，打勾 + 给对照 + 累计统计 ——
+  btns[rightIdx].click();
+  ok("答对提示", /答对了/.test(fb.textContent), fb.textContent);
+  ok("正确项被标记 ✓ 正确", btns[rightIdx].classList.contains("right"));
+  var statLine = document.getElementById("qStat").textContent;
+  ok("显示这个词累计答对/答错", /答对 1 次 \/ 答错 1 次/.test(statLine), statLine);
+  var pair = document.getElementById("qPair").textContent;
+  ok("显示 英文＝中文 对照", pair.indexOf(target) !== -1 && pair.indexOf(t.meaning) !== -1, pair);
+  ok("逐词对次=1", Store.getCount(target).correct === 1);
+  ok("进度保存住了", !!Store.loadProgress(), JSON.stringify(Store.loadProgress()));
+  var s = Store.getStats();
+  ok("当天新学只 +1（重试不加）", s.todayNew === 1, "todayNew=" + s.todayNew);
+  ok("答题数只 +1", s.totalAnswered === 1, "total=" + s.totalAnswered);
+  // —— 连错 3 次：到第三次才给详细解析 ——
+  var box2 = document.createElement("div");
+  document.body.appendChild(box2);
+  var t2 = null;
+  WORDS.forEach(function (w) { if (w.word === "below") t2 = w; });
+  Quiz.mount(box2, { mode: "new", kind: "en2zh", words: ["below"], pool: WORDS, onAnswer: function () {}, onFinish: function () {} });
+  var btns2 = box2.querySelectorAll("#qOptions .option-btn");
+  var right2 = -1;
+  for (var k2 = 0; k2 < btns2.length; k2++) {
+    if (btns2[k2].textContent.indexOf(t2.meaning) !== -1) right2 = k2;
+  }
+  for (var r3 = 0; r3 < 3; r3++) {
+    for (var j2 = 0; j2 < btns2.length; j2++) {
+      if (j2 !== right2 && !btns2[j2].disabled) { btns2[j2].click(); break; }
+    }
+  }
+  var fb2 = box2.querySelector("#qFeedback");
+  ok("连错 3 次才给解析", /三次都没选对/.test(fb2.textContent), fb2.textContent);
+  ok("连错 3 次后正确项显出来", box2.querySelector("#qOptions .option-btn.right") !== null);
+  ok("连错 3 次也给了 英文＝中文", box2.querySelector("#qPair").textContent.indexOf("below") !== -1);
+  ok("连错 3 次 逐词错次=3", Store.getCount("below").wrong === 3, JSON.stringify(Store.getCount("below")));
+
+  // —— 错题两类 + 老数据兼容 ——
+  Store.markMastered("important");
+  ok("复习答对后仍留在错题本（已掌握）", Store.masteredWords().indexOf("important") !== -1);
+  ok("已掌握的不算待复习", Store.pendingWords().indexOf("important") === -1);
+  ok("老数据没统计字段时按 0 算", Store.getCount("没有背过的词").correct === 0 && Store.getCount("没有背过的词").wrong === 0);
+
+  // —— 每日复习：学过的词才进队列，今天刷过的不重复 ——
+  WORDS.slice(0, 5).forEach(function (w) { Store.markLearned(w.word); });
+  ok("每日复习从学过的词里出", Store.getLearned().length > 0 && Store.dailyWords().length === Store.getLearned().length, "已学 " + Store.getLearned().length + " ／ 今日队列 " + Store.dailyWords().length);
+  Store.markDaily(Store.dailyWords());
+  ok("今天刷过就不再排队", Store.dailyDue() === 0);
+
+  // —— 进度恢复：带着 idx 重新进学习页，应该从那一题开始 ——
+  Store.saveProgress({ words: ["important", "below"], idx: 1, correct: 1 });
+  var box3 = document.createElement("div");
+  document.body.appendChild(box3);
+  Quiz.mount(box3, {
+    mode: "new", kind: "en2zh", words: ["important", "below"], startIdx: 1, pool: WORDS,
+    onAnswer: function () {}, onFinish: function () {}
+  });
+  var prog = box3.querySelector("#qProgress").textContent;
+  ok("带进度进来从中间那题开始", /第 2 \/ 2/.test(prog), prog);
+} catch (e) {
+  log.push("FAIL｜脚本异常｜" + e.message);
+}
+document.getElementById("out").textContent = log.join("\n");
+</script>
+</body>
+</html>

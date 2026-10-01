@@ -30,12 +30,12 @@ body {
 }
 
 /* ============================================================
-   无障碍两件套（学自徐慧站）
-   1. .skip-link  键盘第一下 Tab 就跳到正文的隐形链接
-   2. .sr-only    只有读屏软件念、眼睛看不见的文字（切页播报用）
+   无障碍零件（学自徐慧站）
+   1. .skip-link  键盘第一下 Tab 就跳到正文的隐形链接（现在就生效）
+   2. .sr-only    只有读屏软件念、眼睛看不见的文字（等「无障碍模式」开关统一启用）
    ============================================================ */
 
-/* 跳过导航：平时藏在画面外，按 Tab  focused 时从左上角滑出来 */
+/* 跳过导航：平时藏在画面外，按 Tab 拿到焦点时从左上角滑出来 */
 .skip-link {
   position: absolute;
   left: -9999px;                 /* 平时挪出屏幕，看不见也点不到 */
@@ -517,3 +517,163 @@ body {
 .word-detail:hover { background: rgba(37, 99, 235, 0.08); }
 /* 学习页词卡顶部：详情在左、收藏在右 */
 .word-head.has-detail { justify-content: space-between; }
+
+/* ============================================================
+   Day 14 backlog 落地：掌握状态 / 长按 peek / 强化反馈 / 逐词统计
+   想改颜色就动 :root 那几个变量；想调反馈条大小动 .feedback / .word-pair
+   ============================================================ */
+
+/* 卡片最左边的掌握状态（backlog ③） */
+.master-pill {
+  font-size: 13px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: rgba(255, 107, 94, 0.12);
+  color: var(--accent-red);
+  white-space: nowrap;
+}
+.master-pill.mastered { background: rgba(46, 204, 113, 0.14); color: var(--accent-green); }
+.head-right { display: inline-flex; align-items: center; gap: 6px; }
+
+/* 长按 peek：平时一句灰字提示，长按后展开成"英文 ＝ 中文 + 掌握状态" */
+.peek-tip {
+  margin: -14px 0 18px;
+  min-height: 34px;
+  font-size: 14px;
+  color: var(--text-soft);
+  background: #f6f3ee;
+  border-radius: var(--radius-sm);
+  padding: 6px 14px;
+  line-height: 1.6;
+  user-select: none;          /* 长按别选中文字 */
+  cursor: pointer;
+}
+.peek-tip.open {
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--text);
+  border: 1px dashed rgba(37, 99, 235, 0.35);
+}
+.peek-tip.open b { font-size: 17px; }
+.peek-arrow { margin: 0 8px; color: var(--accent-blue); font-weight: 700; }
+.peek-status {
+  display: inline-block;
+  margin-left: 10px;
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
+}
+.peek-status.ok { background: rgba(46, 204, 113, 0.14); color: var(--accent-green); }
+.peek-status.wait { background: rgba(255, 107, 94, 0.12); color: var(--accent-red); }
+
+/* 强化反馈（backlog 第 8 条）：答完题给一块"英文 ＝ 中文"对照 + 累计对/错次数 */
+.word-pair {
+  margin: -6px 0 12px;
+  min-height: 0;
+  font-size: 16px;
+  color: var(--text);
+  display: none;
+}
+.word-pair:not(:empty) {
+  display: block;
+  background: #f6f3ee;
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+}
+.stat-line {
+  font-size: 13px;
+  color: var(--text-soft);
+  margin: -4px 0 16px;
+  min-height: 18px;
+}
+/* 重试中（还没定局）：不给答案，只提示还剩几次 */
+.feedback.retrying {
+  background: rgba(255, 107, 94, 0.1);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin: 0 0 12px;
+}
+/* 定局后：正确项打勾（backlog 第 8 条） */
+.option-btn.right::after {
+  content: " ✓ 正确";
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent-green);
+  margin-left: 6px;
+}
+.option-btn.wrong-tried {
+  background: rgba(255, 107, 94, 0.1);
+  border-color: rgba(214, 69, 58, 0.45);
+  color: var(--accent-red);
+  opacity: 0.7;
+}
+
+/* 筛选小标签（错题清单/词表统计共用） */
+.filter-tabs { display: flex; gap: 8px; margin: 4px 2px 12px; flex-wrap: wrap; }
+.filter-tab {
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text-soft);
+  background: var(--bg);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.filter-tab:hover { border-color: rgba(37, 99, 235, 0.35); }
+.filter-tab.active { background: rgba(37, 99, 235, 0.1); color: var(--accent-blue); font-weight: 600; }
+.filter-tab:focus-visible { outline: 3px solid #2f6fed; outline-offset: 2px; }
+
+/* 错题本里"错过 N 次"（backlog ①） */
+.wrong-times { font-size: 12px; color: var(--text-soft); white-space: nowrap; }
+.wrong-times.hot { color: var(--accent-red); font-weight: 600; }
+
+/* 首页 4 个入口（新词学习 / 错题复习 / 每日复习 / 词表统计） */
+.entry-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.entry-green { border-top-color: var(--accent-green); }
+.entry-purple { border-top-color: #7a4fd1; }
+.entry-green .entry-btn { color: var(--accent-green); }
+.entry-purple .entry-btn { color: #7a4fd1; }
+
+/* 结果页里的按钮组（再来一组 + 完成回首页） */
+.result-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+.next-btn.ghost {
+  background: #fff;
+  color: var(--accent-blue);
+  border: 2px solid var(--accent-blue);
+  text-decoration: none;
+  display: inline-block;
+  line-height: 1.2;
+  padding: 10px 24px;
+}
+.result-lines {
+  margin-top: 18px;
+  text-align: left;
+  max-height: 260px;
+  overflow-y: auto;
+  border-top: 1px solid #f0ece6;
+}
+.result-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 4px;
+  border-bottom: 1px solid #f6f2ec;
+  font-size: 15px;
+}
+.result-word { font-weight: 600; }
+.result-mark.ok { color: var(--accent-green); font-weight: 700; }
+.result-mark.no { color: var(--accent-red); font-weight: 700; }
+.result-stat { margin-left: auto; font-size: 13px; color: var(--text-soft); }
+
+/* 词表统计每一行：左边序号+词，右边"对 x / 错 y" */
+.list-row { border-bottom: 1px solid #f0ece6; }
+.list-counts { display: inline-flex; gap: 8px; }
+.list-counts .cnt-ok, .list-counts .cnt-no {
+  font-size: 12px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.list-counts .cnt-ok { background: rgba(46, 204, 113, 0.12); color: var(--accent-green); }
+.list-counts .cnt-no { background: rgba(255, 107, 94, 0.12); color: var(--accent-red); }
