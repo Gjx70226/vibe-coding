@@ -14,65 +14,21 @@
   <!-- 无障碍：键盘第一下 Tab 就能跳过导航直接进正文 -->
   <a class="skip-link" href="#main">跳到正文</a>
 
-  <!-- 顶部胶囊导航：三个页面互相跳（当前页用 aria-current 标出来，读屏会读「当前项」） -->
+  <!-- 顶部胶囊导航：改成 hash 链接，点一下不刷新页面，只换中间那块（data-route 给路由做高亮） -->
   <nav class="pill-nav">
-    <a href="index.html" data-page="index" aria-current="page">首页</a>
-    <a href="study.html" data-page="study">新词学习</a>
-    <a href="review.html" data-page="review">错题复习</a>
+    <a href="#/" data-route="home">首页</a>
+    <a href="#/study" data-route="study">新词学习</a>
+    <a href="#/review" data-route="review">错题复习</a>
   </nav>
 
   <main class="container" id="main" tabindex="-1">
-    <!-- 加载中转圈：页面打开先显示，JS 延迟后隐藏（四态之"加载中"） -->
+    <!-- 加载中转圈：切视图先显示，400ms 后换成正文（四态之"加载中"） -->
     <div class="loading" id="loading"><div class="spinner"></div><span>加载中…</span></div>
 
-    <div id="content" hidden>
-    <header class="hero">
-      <h1>四级备考助手 <span class="heart">❤️</span></h1>
-      <p class="subtitle">记单词 · 自测 · 巩固生词</p>
-      <span class="badge-online">1926 人正在学习</span>
-    </header>
+    <!-- 路由把对应视图的 HTML 塞进这个盒子（四态之"成功/空"都走它） -->
+    <div id="content" hidden></div>
 
-    <!-- 首页四个数字卡片（占位值，后续接 localStorage） -->
-    <section class="stat-grid">
-      <div class="stat-card">
-        <div class="stat-num" id="stat-today">0</div>
-        <div class="stat-label">今日新学</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num" id="stat-review">0</div>
-        <div class="stat-label">待复习错题</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num" id="stat-total">0</div>
-        <div class="stat-label">累计学习单词</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-num" id="stat-acc">0%</div>
-        <div class="stat-label">答题正确率</div>
-      </div>
-    </section>
-
-    <!-- 两个入口卡片 -->
-    <section class="entry-grid">
-      <a class="entry-card entry-blue" href="study.html">
-        <div class="entry-icon">📚</div>
-        <div class="entry-title">新词学习</div>
-        <div class="entry-desc">选择题背词，答错自动进错题本</div>
-        <div class="entry-btn">开始学习 →</div>
-      </a>
-      <a class="entry-card entry-red" href="review.html">
-        <div class="entry-icon">🔁</div>
-        <div class="entry-title">错题复习</div>
-        <div class="entry-desc">重做待复习错题，答对即移除</div>
-        <div class="entry-btn">去复习 →</div>
-      </a>
-    </section>
-
-    <!-- 空状态：全新用户（啥都没学）时显示友好引导，复用 .empty-box -->
-    <div class="empty-box" id="homeEmpty" hidden>📚 还没有学习记录，点击下方「新词学习」开始背单词吧</div>
-    </div><!-- /#content -->
-
-    <!-- 出错状态：模拟加载失败时显示红条+重试（四态之"出错"） -->
+    <!-- 出错状态：视图崩了/模拟失败时显示红条+重试（四态之"出错"） -->
     <div class="error-box" id="errorBox" hidden>
       <div class="err-icon">⚠️</div>
       <div class="err-text">加载失败，请检查网络后重试</div>
@@ -83,10 +39,14 @@
   <!-- 切页播报腔：读屏软件会念这里的一句话（眼睛看不见） -->
   <div id="srLive" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
-  <!-- 先引入词库（定义全局 WORDS），再引入脚本（顺序不能反） -->
+  <!-- 先引入词库与公共层，再引入四个视图，最后引入路由（顺序不能反） -->
   <script src="components.js"></script>
   <script src="store.js"></script>
   <script src="words.js"></script>
-  <script src="app.js"></script>
+  <script src="app.js"></script>      <!-- 首页视图 HomeView -->
+  <script src="study.js"></script>    <!-- 学习视图 StudyView -->
+  <script src="review.js"></script>   <!-- 复习视图 ReviewView -->
+  <script src="detail.js"></script>   <!-- 详情视图 DetailView -->
+  <script src="router.js"></script>   <!-- 最后启动路由 -->
 </body>
 </html>
