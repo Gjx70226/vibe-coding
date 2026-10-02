@@ -201,7 +201,11 @@
       opts.forEach(function (o, i) {
         var b = document.createElement("button");
         b.className = "option-btn";
-        b.innerHTML = posBadge(o.word) + (kind === "en2zh" ? o.meaning : o.word);
+        // 题干是英文（en2zh）时，选项存的是「{word,meaning}」一对；
+        // 题干是中文（zh2en）时，选项存的是光秃秃的英文单词字符串。
+        // 以前这里一律按对象取 o.word，所以复习/每日那两页四个按钮全是 undefined。
+        var plain = (kind === "zh2en");
+        b.innerHTML = posBadge(plain ? o : o.word) + (plain ? o : o.meaning);
         b.onclick = function () { choose(o, t, i); };
         optionsEl.appendChild(b);
       });
