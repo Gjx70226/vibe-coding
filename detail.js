@@ -2,7 +2,7 @@
 // 打开方式：地址栏 #/detail?word=important（router 把 query 传给 render）
 // 自己控制渲染，收藏/是否已学只问 Store，不碰浏览器存储。
 (function () {
-  var POS_TEXT = { V: "动词", N: "名词", A: "形容词", ADV: "副词" };
+  var POS_TEXT = { V: "动词", N: "名词", adj: "形容词", ADV: "副词" };
 
   // 在词库里按英文精确查找（忽略大小写），并记录排名
   function findWord(w) {
@@ -56,7 +56,8 @@
 
       var posEl = document.getElementById("dPos");
       if (t.pos) {
-        posEl.innerHTML = '<span class="pos-tag ' + t.pos + '">' + t.pos + "</span> " + (POS_TEXT[t.pos] || "");
+        // 形容词标签按词典体写成小写 adj.；其余词性保持原样
+        posEl.innerHTML = '<span class="pos-tag ' + t.pos + '">' + t.pos + (t.pos === "adj" ? "." : "") + "</span> " + (POS_TEXT[t.pos] || "");
       } else {
         posEl.innerHTML = '<span class="muted">词性未标注</span>';
       }

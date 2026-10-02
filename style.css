@@ -285,7 +285,7 @@ body {
 }
 .pos-tag.V   { background: #e8f0fe; color: var(--accent-blue); }
 .pos-tag.N   { background: #e7f6ee; color: var(--accent-green); }
-.pos-tag.A   { background: #fff1e6; color: #d9801a; }
+.pos-tag.adj { background: #fff1e6; color: #d9801a; }
 .pos-tag.ADV { background: #f0e9fb; color: #7a4fd1; }
 
 /* ============================================================
