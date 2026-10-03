@@ -467,6 +467,19 @@ body {
 .error-box .err-icon { font-size: 34px; }
 .error-box .err-text { font-size: 15px; line-height: 1.6; }
 /* 红条下面那行小字：把真正炸在哪一步写出来（手机上也能直接看见，方便截图回传定位） */
+/* 首页「上次出错」提醒：红框原因留了档，回首页就能看见，不用每次截红框 */
+.last-err {
+  margin: 14px 16px 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fff7e6;
+  border: 1px solid #ffd591;
+}
+.last-err-title { font-size: 13px; font-weight: 700; color: #ad6800; margin-bottom: 4px; }
+.last-err-msg   { font-size: 13px; line-height: 1.6; color: #873800; word-break: break-all; }
+.last-err-btn   { margin-top: 8px; font-size: 12px; padding: 5px 12px; border-radius: 8px;
+                  border: 1px solid #ffd591; background: #fff; color: #ad6800; }
+
 .error-box .err-detail {
   width: 100%;
   font-size: 12px;

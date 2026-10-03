@@ -20,6 +20,7 @@
       '<div class="stat-card"><div class="stat-num" id="stat-total">0</div><div class="stat-label">累计学习单词</div></div>' +
       '<div class="stat-card"><div class="stat-num" id="stat-acc">0%</div><div class="stat-label">答题正确率</div></div>' +
     '</section>' +
+    '<div class="last-err" id="lastErr" hidden></div>' +
     '<section class="entry-grid">' +
       '<a class="entry-card entry-blue" href="#/study">' +
         '<div class="entry-icon">📚</div><div class="entry-title">新词学习</div>' +
@@ -87,6 +88,26 @@
     }
   }
 
+  // 上次在哪儿翻车了？红框一出现就会把原因记下来（components.js 里写的档），
+  // 这里在首页画成一行黄字——不用每次都跑去截那块红框，回来就看见。
+  function showLastError() {
+    var el = document.getElementById("lastErr");
+    if (!el) return;
+    var msg = (typeof UI !== "undefined" && UI.lastError && UI.lastError()) || "";
+    if (!msg) { el.hidden = true; return; }
+    el.hidden = false;
+    el.innerHTML = "<div class=\"last-err-title\">上次打开出了个错（先别急着刷新）：</div>" +
+      "<div class=\"last-err-msg\">" + msg + "</div>" +
+      "<button class=\"last-err-btn\" type=\"button\" id=\"lastErrOk\">知道了，清掉这条</button>";
+    var btn = document.getElementById("lastErrOk");
+    if (btn) {
+      btn.onclick = function () {
+        if (typeof UI !== "undefined" && UI.clearLastError) UI.clearLastError();
+        el.hidden = true;
+      };
+    }
+  }
+
   // 全新用户（啥都没学）时给个引导
   function maybeHomeEmpty() {
     var el = document.getElementById("homeEmpty");
@@ -102,6 +123,7 @@
     render: function (container) {
       container.innerHTML = HOME_HTML;
       renderSummary();
+      showLastError();
       maybeHomeEmpty();
     }
   };

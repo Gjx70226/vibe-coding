@@ -110,7 +110,23 @@
     setHidden("content", true);
     setHidden("errorBox", false);
     var d = document.getElementById("errDetail");
-    if (d) d.textContent = detail ? ("错误原因：" + detail) : "";
+    var text = detail ? ("错误原因：" + detail) : "";
+    if (d) d.textContent = text;
+    // 留个档：把出错原因记进本地存储。下次回到首页就能看见「上次出错：xxx」，
+    // 不用每次都去截那块红框——少一步，报错也跑不掉。
+    try { if (detail) window.localStorage.setItem("cet4_lasterr", String(detail)); } catch (e) {}
+  }
+
+  // 读上次那个错（首页用来显示一行黄字；没有就返回空）
+  function lastError() {
+    try {
+      var v = window.localStorage.getItem("cet4_lasterr");
+      return v ? String(v) : "";
+    } catch (e) { return ""; }
+  }
+  // 清掉上次那个错（用户点「知道了」时用）
+  function clearLastError() {
+    try { window.localStorage.removeItem("cet4_lasterr"); } catch (e) {}
   }
 
   // 空状态：把某一块提示显示出来
@@ -128,6 +144,7 @@
   global.UI = {
     el: el, statCard: statCard, wordRow: wordRow, renderList: renderList,
     card: card, toast: toast,
-    pageLoading: pageLoading, pageReady: pageReady, pageError: pageError, pageEmpty: pageEmpty
+    pageLoading: pageLoading, pageReady: pageReady, pageError: pageError, pageEmpty: pageEmpty,
+    lastError: lastError, clearLastError: clearLastError
   };
 })(window);
