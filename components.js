@@ -102,10 +102,15 @@
   }
 
   // 出错：藏转圈和正文，露出红条（红条上自带「重试」按钮）
-  function pageError() {
+  // 传 detail 就把具体原因写在红条下面一行小字——
+  //   以前只写「请检查网络」，结果没网有线都一个样，真正的报错被吞了，根本没法查。
+  //   现在手机上一眼就能看见到底是哪一步炸的，截个图发回来就能定位。
+  function pageError(detail) {
     setHidden("loading", true);
     setHidden("content", true);
     setHidden("errorBox", false);
+    var d = document.getElementById("errDetail");
+    if (d) d.textContent = detail ? ("错误原因：" + detail) : "";
   }
 
   // 空状态：把某一块提示显示出来

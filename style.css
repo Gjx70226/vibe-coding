@@ -466,6 +466,14 @@ body {
 .error-box[hidden] { display: none; }
 .error-box .err-icon { font-size: 34px; }
 .error-box .err-text { font-size: 15px; line-height: 1.6; }
+/* 红条下面那行小字：把真正炸在哪一步写出来（手机上也能直接看见，方便截图回传定位） */
+.error-box .err-detail {
+  width: 100%;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #8a6a66;
+  word-break: break-all;
+}
 .retry-btn {
   font-family: inherit;
   font-size: 14px;

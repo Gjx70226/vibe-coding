@@ -56,10 +56,17 @@
     if (contentEl) contentEl.innerHTML = "";
 
     // 模拟加载失败（演示用，?simerror=1 或 #/...?simerror=1）
-    if (/(^|&)simerror=1/.test(r.query)) { UI.pageError(); return; }
+    if (/(^|&)simerror=1/.test(r.query)) {
+      UI.pageError("这是故意装出来的假故障（地址栏带了 simerror=1）");
+      return;
+    }
 
     var win = window[VIEWS[name]];
-    if (!win || !win.render) { UI.pageError(); return; }
+    // 视图没找到：多半是这个页面的脚本没加载成功，别再骗人说是网络问题
+    if (!win || !win.render) {
+      UI.pageError("「" + name + "」这个页面没加载出来，点下面的重试");
+      return;
+    }
 
     // 转圈 400ms 再渲染（和原来每页的加载态手感一致）
     setTimeout(function () {
@@ -67,7 +74,11 @@
         win.render(contentEl, r.query);   // 视图自己往 contentEl 里塞内容
         UI.pageReady();                   // 露出正文
       } catch (e) {
-        UI.pageError();                   // 视图崩了不能白屏，给红条+重试
+        // 以前这里只弹一句「检查网络」，真正的报错被吞掉，手机上一脸懵。
+        // 现在：控制台留一份，红条上再写一句人能看懂的原因。
+        try { if (window.console && console.error) console.error("[view:" + name + "]", e); } catch (_) {}
+        var msg = (e && e.message) ? e.message : String(e);
+        UI.pageError(msg || ("渲染「" + name + "」时出错了"));
       }
     }, 400);
   }
