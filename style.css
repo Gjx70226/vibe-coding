@@ -283,11 +283,11 @@ body {
   text-align: center;
   vertical-align: middle;
 }
-.pos-tag.V   { background: #e8f0fe; color: var(--accent-blue); }   /* 动词 蓝 */
-.pos-tag.N   { background: #e7f6ee; color: var(--accent-green); } /* 名词 绿 */
+/* 词性一律小写（词典体 n. v. adj. adv. …），配色按小学过的一条改全站生效 */
+.pos-tag.v   { background: #e8f0fe; color: var(--accent-blue); }   /* 动词 蓝 */
+.pos-tag.n   { background: #e7f6ee; color: var(--accent-green); } /* 名词 绿 */
 .pos-tag.adj { background: #fff1e6; color: #d9801a; }             /* 形容词 橙 */
-.pos-tag.ADV { background: #f0e9fb; color: #7a4fd1; }             /* 副词 紫 */
-.pos-tag.adv { background: #f0e9fb; color: #7a4fd1; }             /* 副词 紫（小写） */
+.pos-tag.adv { background: #f0e9fb; color: #7a4fd1; }             /* 副词 紫 */
 .pos-tag.prep{ background: #eef1f6; color: #5b6472; }             /* 介词 灰蓝 */
 .pos-tag.conj{ background: #e6f4f7; color: #2a7f8c; }             /* 连词 青 */
 .pos-tag.pron{ background: #fbeef6; color: #a8487f; }             /* 代词 粉 */
@@ -661,6 +661,15 @@ body {
   border-color: rgba(214, 69, 58, 0.45);
   color: var(--accent-red);
   opacity: 0.7;
+}
+/* 选错那一行自己摊开的「另一半意思」（百词斩式）：变红的同时告诉你这个词长啥样 / 啥意思 */
+.option-btn .opt-reveal {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-red);
+  margin-top: 4px;
+  line-height: 1.5;
 }
 
 /* 筛选小标签（错题清单/词表统计共用） */

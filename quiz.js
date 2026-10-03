@@ -90,6 +90,23 @@
     return '<span class="pos-tag ' + p + '">' + p + ".</span>";
   }
 
+  // 小甘 2026-10-03 定的（百词斩式）：选错的那一项不光变红，得当场把「另一半意思」摊开——
+  // 你点的是中文义项（en2zh），就给你那个英文词（加上音标和中文）；
+  // 你点的是英文单词（zh2en），就给你它的中文意思。看了这个才知道自己错在哪个词上。
+  function revealOf(chosen, kind) {
+    var s = document.createElement("span");
+    s.className = "opt-reveal";
+    if (kind === "zh2en") {
+      var e = wordMap[chosen];
+      s.textContent = e ? ("（意思是：" + e.meaning + "）") : "";
+    } else {
+      var en = (chosen && chosen.word) || "";
+      var e2 = wordMap[en];
+      s.textContent = en ? ("（" + en + (e2 ? (" " + (e2.phonetic || "") + " " + e2.meaning) : "") + "）") : "";
+    }
+    return s;
+  }
+
   // en2zh：题目是英文、选项给中文释义｜ zh2en：题目是中文、选项给英文单词
   function buildOptions(kind, target, pool) {
     var opts = [];
@@ -303,7 +320,11 @@
 
       // 小甘 2026-10-03 定的：**选错一次就给答案**，不再憋到 3 次（原来的"重试 3 次"作废）
       var btns = optionsEl.querySelectorAll(".option-btn");
-      if (btns[btnIndex]) { btns[btnIndex].disabled = true; btns[btnIndex].classList.add("wrong-tried"); }
+      if (btns[btnIndex]) {
+        btns[btnIndex].disabled = true;
+        btns[btnIndex].classList.add("wrong-tried");
+        btns[btnIndex].appendChild(revealOf(chosen, kind));   // 变红的同时，这一行自己摊开另一半意思
+      }
       finish(false, target, stat);
     }
 
@@ -317,7 +338,8 @@
       pairEl.innerHTML = "<b>" + target.word + "</b> " + (target.phonetic || "") +
         '<span class="peek-arrow">＝</span>' + target.meaning;          // backlog 第 8 条：英文 ＝ 中文
       statEl.textContent = "这个词你累计：答对 " + stat.correct + " 次 / 答错 " + stat.wrong + " 次";
-      feedbackEl.textContent = isCorrect ? "✓ 答对了" : "✗ 答错了，正确答案在上面";
+      // 小甘 2026-10-03：那句「正确答案在上面」是废话（方向还会指错），删了，靠颜色自己看
+      feedbackEl.textContent = isCorrect ? "✓ 答对了" : "✗ 答错了";
       feedbackEl.className = "feedback " + (isCorrect ? "ok" : "no");
 
       beepRight();   // 答对：叮咚一声
