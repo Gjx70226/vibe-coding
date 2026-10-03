@@ -270,7 +270,7 @@ body {
   .word-display { font-size: 36px; }
 }
 
-/* 选项前的词性小徽章：动词V/名词N/形容词A/副词ADV */
+/* 选项前的词性小徽章：一律词典体小写（v. n. adj. adv. prep. conj. pron.） */
 .pos-tag {
   display: inline-block;
   min-width: 20px;
@@ -283,10 +283,14 @@ body {
   text-align: center;
   vertical-align: middle;
 }
-.pos-tag.V   { background: #e8f0fe; color: var(--accent-blue); }
-.pos-tag.N   { background: #e7f6ee; color: var(--accent-green); }
-.pos-tag.adj { background: #fff1e6; color: #d9801a; }
-.pos-tag.ADV { background: #f0e9fb; color: #7a4fd1; }
+.pos-tag.V   { background: #e8f0fe; color: var(--accent-blue); }   /* 动词 蓝 */
+.pos-tag.N   { background: #e7f6ee; color: var(--accent-green); } /* 名词 绿 */
+.pos-tag.adj { background: #fff1e6; color: #d9801a; }             /* 形容词 橙 */
+.pos-tag.ADV { background: #f0e9fb; color: #7a4fd1; }             /* 副词 紫 */
+.pos-tag.adv { background: #f0e9fb; color: #7a4fd1; }             /* 副词 紫（小写） */
+.pos-tag.prep{ background: #eef1f6; color: #5b6472; }             /* 介词 灰蓝 */
+.pos-tag.conj{ background: #e6f4f7; color: #2a7f8c; }             /* 连词 青 */
+.pos-tag.pron{ background: #fbeef6; color: #a8487f; }             /* 代词 粉 */
 
 /* ============================================================
    Day 11 新增：单词卡收藏按钮 + toast 反馈
