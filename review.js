@@ -109,7 +109,7 @@
             "<button class='next-btn' id='againBtn'>再来一组</button>" +
             "<a class='next-btn ghost' href='#/'>完成，回首页</a>" +
           "</div>";
-        resultEl.style.display = "block";
+        UI.revealResult(resultEl, wrapEl);   // 结果页顶上来 + 滚回顶部，不用往下滑
         document.getElementById("againBtn").onclick = function () { start(); };
       }
 
@@ -117,8 +117,7 @@
       function start() {
         var words = Store.pendingWords();
         if (!words.length) {
-          wrapEl.style.display = "none";
-          resultEl.style.display = "block";
+          UI.revealResult(resultEl, wrapEl);   // 空态也顶上来，别让人在半截页面里找
           resultEl.innerHTML =
             "<h2>🎉 错题都复习完啦</h2>" +
             "<p>当前没有待复习的错题。<br>去「新词学习」多积累一些吧。</p>" +

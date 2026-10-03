@@ -52,7 +52,7 @@
             "<button class='next-btn' id='againBtn'>再来一组</button>" +
             "<a class='next-btn ghost' href='#/'>完成，回首页</a>" +
           "</div>";
-        resultEl.style.display = "block";
+        UI.revealResult(resultEl, wrapEl);   // 结果页顶上来 + 滚回顶部，不用往下滑
         Store.clearProgress();   // 做完一批，进度不再挂着
         document.getElementById("againBtn").onclick = function () { start(); };
       }

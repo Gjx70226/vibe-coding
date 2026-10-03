@@ -29,15 +29,14 @@
             "<button class='next-btn' id='againBtn'>再刷几个</button>" +
             "<a class='next-btn ghost' href='#/'>完成，回首页</a>" +
           "</div>";
-        resultEl.style.display = "block";
+        UI.revealResult(resultEl, wrapEl);   // 结果页顶上来 + 滚回顶部，不用往下滑
         document.getElementById("againBtn").onclick = function () { start(); };
       }
 
       function start() {
         var words = Store.dailyWords();
         if (!words.length) {
-          wrapEl.style.display = "none";
-          resultEl.style.display = "block";
+          UI.revealResult(resultEl, wrapEl);   // 空态也顶上来，别让人在半截页面里找
           var learned = Store.getLearned().length;
           resultEl.innerHTML =
             "<h2>" + (learned ? "今日复习都刷完啦 🎉" : "还没有已学的词") + "</h2>" +

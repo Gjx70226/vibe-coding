@@ -89,7 +89,7 @@
 
   // 版本号：改过代码就把这里改一下，顺手把 index.html 里所有 ?v= 一起改。
   // 作用：手机上跑的是新代码还是旧代码，看一眼就清楚，不用靠猜。
-  var APP_VER = "2026-10-03b";
+  var APP_VER = "2026-10-03c";
 
   // 把版本号写进站底和红框（页面一加载就写，红框再弹时也能对上）
   function writeVersion() {
@@ -152,12 +152,31 @@
     if (box) box.hidden = false;
   }
 
+  // 结果页统一「直接跳到眼前」，不用再往下滑（小甘 2026-10-03 手机实测意见：太 low）
+  // 问题：答题卡片很长，结果页挂在它下面，答完最后一下手指停在页面底部，
+  //       结果被顶在屏幕外，还得自己划下去找——很多人就以为「没反应」。
+  // 做法：把答题卡片收起来，结果页顶到最上面，再滚回页面顶部。
+  function revealResult(resultEl, wrapEl) {
+    if (wrapEl) wrapEl.style.display = "none";   // 收起答题卡片，结果页顶上来
+    if (resultEl) resultEl.style.display = "block";
+    scrollTop();
+  }
+
+  // 平滑滚到页面顶部（手机上有滑动感；老浏览器不认 options 就退回一次性跳过去）
+  function scrollTop() {
+    try {
+      if (window.scrollTo) window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (e) {
+      try { if (window.scrollTo) window.scrollTo(0, 0); } catch (e2) {}
+    }
+  }
+
   // 对外暴露
   // 注：原「切页播报 / 焦点落正文」那组零件（announce、initA11y）已撤掉，
   //     全部等「无障碍模式」开关一起接（开关打开才念切页 + A/B/C/D）。
   global.UI = {
     el: el, statCard: statCard, wordRow: wordRow, renderList: renderList,
-    card: card, toast: toast,
+    card: card, toast: toast, revealResult: revealResult, scrollTop: scrollTop,
     pageLoading: pageLoading, pageReady: pageReady, pageError: pageError, pageEmpty: pageEmpty,
     lastError: lastError, clearLastError: clearLastError,
     ver: function () { writeVersion(); return APP_VER; }
