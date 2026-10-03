@@ -87,6 +87,18 @@
     if (b) b.hidden = hidden;
   }
 
+  // 版本号：改过代码就把这里改一下，顺手把 index.html 里所有 ?v= 一起改。
+  // 作用：手机上跑的是新代码还是旧代码，看一眼就清楚，不用靠猜。
+  var APP_VER = "2026-10-03b";
+
+  // 把版本号写进站底和红框（页面一加载就写，红框再弹时也能对上）
+  function writeVersion() {
+    var foot = document.getElementById("verFoot");
+    if (foot) foot.textContent = "四级备考助手 · 版本 " + APP_VER;
+    var box = document.getElementById("errVer");
+    if (box) box.textContent = "版本 " + APP_VER + (box.dataset.ver === "1" ? "" : "");
+  }
+
   // 加载中：只显示转圈，正文和红条都藏起
   function pageLoading() {
     setHidden("loading", false);
@@ -115,6 +127,8 @@
     // 留个档：把出错原因记进本地存储。下次回到首页就能看见「上次出错：xxx」，
     // 不用每次都去截那块红框——少一步，报错也跑不掉。
     try { if (detail) window.localStorage.setItem("cet4_lasterr", String(detail)); } catch (e) {}
+    // 顺手把版本号印在红框上：截这一屏，就能看出手机跑的是哪版
+    writeVersion();
   }
 
   // 读上次那个错（首页用来显示一行黄字；没有就返回空）
@@ -145,6 +159,9 @@
     el: el, statCard: statCard, wordRow: wordRow, renderList: renderList,
     card: card, toast: toast,
     pageLoading: pageLoading, pageReady: pageReady, pageError: pageError, pageEmpty: pageEmpty,
-    lastError: lastError, clearLastError: clearLastError
+    lastError: lastError, clearLastError: clearLastError,
+    ver: function () { writeVersion(); return APP_VER; }
   };
+  // 页面一加载就把版本号写上，站底任何一屏都能看见
+  if (document.getElementById("verFoot")) writeVersion();
 })(window);

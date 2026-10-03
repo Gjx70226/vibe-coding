@@ -487,6 +487,20 @@ body {
   color: #8a6a66;
   word-break: break-all;
 }
+/* 红框里的版本号：截图这一行就知道手机跑的是不是最新版 */
+.error-box .err-ver {
+  width: 100%;
+  margin-top: 8px;
+  font-size: 11px;
+  color: #b0908a;
+}
+/* 站底常驻版本号：任何一屏都能看见 */
+.foot-ver {
+  padding: 14px 18px 26px;
+  text-align: center;
+  font-size: 11px;
+  color: #b6a9a5;
+}
 .retry-btn {
   font-family: inherit;
   font-size: 14px;

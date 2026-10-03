@@ -3,8 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 破缓存：每次都重新问一遍，别让浏览器拿旧零件拼新页面（vivo/微信浏览器会缓存 quiz.js 这类固定文件名） -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>四级备考助手</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20261003b">
 </head>
 <body>
   <!-- 背景光斑：纯装饰，让白底不单调 -->
@@ -35,20 +39,27 @@
       <div class="err-text">加载失败，请检查网络后重试</div>
       <button class="retry-btn" id="retryBtn" type="button">重试</button>
       <div class="err-detail" id="errDetail"></div>
+      <!-- 版本号：截图这一行就能看出你手机跑的是不是最新版 -->
+      <div class="err-ver" id="errVer">版本 ?</div>
     </div>
   </main>
 
-  <!-- 先引入词库与公共层，再引入四个视图，最后引入路由（顺序不能反） -->
-  <script src="components.js"></script>
-  <script src="store.js"></script>
-  <script src="words.js"></script>
-  <script src="quiz.js"></script>     <!-- 答题卡公共零件（学习/复习/每日三处共用） -->
-  <script src="app.js"></script>      <!-- 首页视图 HomeView -->
-  <script src="study.js"></script>    <!-- 学习视图 StudyView -->
-  <script src="review.js"></script>   <!-- 复习视图 ReviewView -->
-  <script src="daily.js"></script>    <!-- 每日复习视图 DailyView -->
-  <script src="list.js"></script>     <!-- 词表统计视图 ListView -->
-  <script src="detail.js"></script>   <!-- 详情视图 DetailView -->
-  <script src="router.js"></script>   <!-- 最后启动路由 -->
+  <!-- 站底常驻版本号：首页、答题页、红框之外，任何一屏都能看见 -->
+  <footer class="foot-ver" id="verFoot">四级备考助手 · 版本 ?</footer>
+
+  <!-- 先引入词库与公共层，再引入四个视图，最后引入路由（顺序不能反）
+       每个 ?v= 版本号是故意加的：文件名不变时浏览器会拿旧的那份，
+       加了版本号浏览器就认为新的是"另一个文件"，必须重新下载 -->
+  <script src="components.js?v=20261003b"></script>
+  <script src="store.js?v=20261003b"></script>
+  <script src="words.js?v=20261003b"></script>
+  <script src="quiz.js?v=20261003b"></script>     <!-- 答题卡公共零件（学习/复习/每日三处共用） -->
+  <script src="app.js?v=20261003b"></script>      <!-- 首页视图 HomeView -->
+  <script src="study.js?v=20261003b"></script>    <!-- 学习视图 StudyView -->
+  <script src="review.js?v=20261003b"></script>   <!-- 复习视图 ReviewView -->
+  <script src="daily.js?v=20261003b"></script>    <!-- 每日复习视图 DailyView -->
+  <script src="list.js?v=20261003b"></script>     <!-- 词表统计视图 ListView -->
+  <script src="detail.js?v=20261003b"></script>   <!-- 详情视图 DetailView -->
+  <script src="router.js?v=20261003b"></script>   <!-- 最后启动路由 -->
 </body>
 </html>
