@@ -6,10 +6,63 @@
 //           ③ 以后要加「无障碍模式」的播报，也只改这一个文件。
 // ===== 今日边界（不做）：不做计时/倒计时、不做 Spaced Repetition 算法、不做结果页（结果页各视图自己写）=====
 (function () {
-  // 每题最多给几次机会（backlog ⑦）
-  var MAX_TRY = 3;
   // 长按多久算"看一眼"（毫秒）
   var PEEK_MS = 500;
+
+  // ---------- 提示音（答对一声、答错一声，2026-10-03 小甘要的）----------
+  // 做法：不打包任何音频文件，直接让浏览器"现场算"一段声音（Web Audio）。
+  // 好处：0 体积、不联网、不加文件；坏处：不能换 mp3（想换就得改成 <audio>）。
+  // 浏览器规矩：不许一进页面就出声，必须先被点过一下才让播 —— 见下面的 unlock()。
+  var audioCtx = null;
+  var unlocked = false;
+  var soundOn = true;   // 由 Store.getSound() 初始化后再覆盖
+
+  function ctx() {
+    try {
+      if (!audioCtx) {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        audioCtx = new AC();
+      }
+      return audioCtx;
+    } catch (e) { return null; }
+  }
+  // 第一次"真的点了屏幕"之后再允许出声
+  function unlock() {
+    if (unlocked) return;
+    var c = ctx();
+    if (!c) return;
+    if (c.state === "suspended" && c.resume) { try { c.resume(); } catch (e) {} }
+    unlocked = true;
+  }
+  // 一个音：freq 频率、from 第几秒响、dur 响多久、type 波形、vol 音量
+  function tone(freq, from, dur, type, vol) {
+    var c = ctx();
+    if (!c) return;
+    var osc = c.createOscillator();
+    var gain = c.createGain();
+    osc.type = type || "sine";            // sine 圆润、triangle 略钝、square 电子感
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, c.currentTime + from);
+    gain.gain.linearRampToValueAtTime(vol, c.currentTime + from + 0.012);  // 别"啪"地炸开
+    gain.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + from + dur);
+    osc.connect(gain);
+    gain.connect(c.destination);
+    osc.start(c.currentTime + from);
+    osc.stop(c.currentTime + from + dur + 0.02);
+  }
+  // 答对：两声上行的"叮咚"（感觉像"对了"）
+  function beepRight() {
+    var c = ctx(); if (!c || !soundOn) return;
+    tone(784, 0.00, 0.16, "sine", 0.22);    // G5
+    tone(1046, 0.13, 0.22, "sine", 0.20);   // C6
+  }
+  // 答错：一短一长的低"嘟"（感觉像"不对"）
+  function beepWrong() {
+    var c = ctx(); if (!c || !soundOn) return;
+    tone(311, 0.00, 0.10, "triangle", 0.22);
+    tone(233, 0.11, 0.26, "triangle", 0.20);
+  }
 
   // 英文 → 整条词 的查找表
   var wordMap = {};
@@ -71,6 +124,7 @@
           '<button class="fav-btn" id="qFav" type="button" aria-label="收藏单词">' +
             '<span class="star-empty">☆</span><span class="star-full">★</span>' +
           '</button>' +
+          '<button class="sound-btn" id="qSound" type="button" aria-label="答题提示音">🔊</button>' +
         '</span>' +
       '</div>' +
       '<div class="word-display" id="qWord" title="长按看另一半意思"></div>' +
@@ -108,7 +162,29 @@
     var statEl = container.querySelector("#qStat");
     var nextBtn = container.querySelector("#qNext");
     var favBtn = container.querySelector("#qFav");
+    var soundBtn = container.querySelector("#qSound");
     var detailEl = container.querySelector("#qDetail");
+
+    soundOn = !!Store.getSound();          // 读存档决定这一局出不出声
+    unlocked = false;
+
+    function paintSound() {
+      if (soundBtn) soundBtn.textContent = soundOn ? "🔊" : "🔇";
+      soundBtn.setAttribute("aria-label", soundOn ? "关闭答题提示音" : "打开答题提示音");
+    }
+    if (soundBtn) {
+      soundBtn.onclick = function () {
+        soundOn = !soundOn;
+        Store.setSound(soundOn);
+        paintSound();
+        if (soundOn) { unlock(); beepRight(); }   // 点开的时候先响一声，让人知道有这个音
+      };
+    }
+    paintSound();
+
+    // 浏览器规矩：先被真点一下（点页面任意处 / 按任意键），之后才允许出声
+    document.addEventListener("pointerdown", unlock, { once: true });
+    document.addEventListener("keydown", unlock, { once: true });
 
     var idx = Math.min(Math.max(opts.startIdx || 0, 0), Math.max((opts.words || []).length - 1, 0));
     var tries = 0;
@@ -220,16 +296,11 @@
       records.push({ word: target.word, correct: correct });
 
       if (correct) { finish(true, target, stat); return; }
-      // 三次都错完：给详细解析（正确答案 + 英文＝中文），不再让人瞎猜（backlog ⑦）
-      if (tries >= MAX_TRY) { finish(false, target, stat); return; }
 
-      // 答错：只说"错了"，不急着给答案；还剩几次机会（backlog ⑦）
+      // 小甘 2026-10-03 定的：**选错一次就给答案**，不再憋到 3 次（原来的"重试 3 次"作废）
       var btns = optionsEl.querySelectorAll(".option-btn");
       if (btns[btnIndex]) { btns[btnIndex].disabled = true; btns[btnIndex].classList.add("wrong-tried"); }
-      feedbackEl.textContent = "✗ 答错了，还能试 " + (MAX_TRY - tries) + " 次";
-      feedbackEl.className = "feedback no retrying";   // retrying＝重试中，不给答案
-      if (stat.wrong === 1) statEl.textContent = "已记入错题本，这个词你目前错过 1 次";
-      onAnswer(target.word, correct, tries, stat, idx);
+      finish(false, target, stat);
     }
 
     // ---------- 本题定局（答对，或 3 次都错完）----------
@@ -242,8 +313,12 @@
       pairEl.innerHTML = "<b>" + target.word + "</b> " + (target.phonetic || "") +
         '<span class="peek-arrow">＝</span>' + target.meaning;          // backlog 第 8 条：英文 ＝ 中文
       statEl.textContent = "这个词你累计：答对 " + stat.correct + " 次 / 答错 " + stat.wrong + " 次";
-      feedbackEl.textContent = isCorrect ? "✓ 答对了" : "✗ 三次都没选对，正确答案在上面";
+      feedbackEl.textContent = isCorrect ? "✓ 答对了" : "✗ 答错了，正确答案在上面";
       feedbackEl.className = "feedback " + (isCorrect ? "ok" : "no");
+
+      beepRight();   // 答对：叮咚一声
+      // 答错：低嘟一声 —— 延后一点，等"正确答案在上面"这句先画出来再响，不糊在一起
+      if (!isCorrect) setTimeout(beepWrong, 60);
 
       onAnswer(target.word, isCorrect, tries, stat, idx);
       nextBtn.textContent = (idx < queue.length - 1) ? "下一词 →" : "查看结果 →";
@@ -265,5 +340,10 @@
     };
   }
 
-  window.Quiz = { mount: mount, MAX_TRY: MAX_TRY };
+  window.Quiz = {
+    mount: mount,
+    // 给页面试听/调试用：直接出一声，不用真去答题
+    preview: function (kind) { unlock(); if (kind === "wrong") beepWrong(); else beepRight(); },
+    soundOn: function () { return soundOn; }
+  };
 })();

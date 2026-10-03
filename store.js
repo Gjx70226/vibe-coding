@@ -20,7 +20,8 @@ var Store = (function () {
     favorites: "cet4_favorites",
     counts: "cet4_counts",     // 逐词：{ 单词: {c:答对次数, w:答错次数} }
     progress: "cet4_progress", // 新词学习：未做完的那批词 + 当前进度
-    daily: "cet4_daily"        // 每日复习：{ date, ids:[] }
+    daily: "cet4_daily",       // 每日复习：{ date, ids:[] }
+    sound: "cet4_sound"        // 答题提示音开关："1" 开 / "0" 关（默认开）
   };
 
   // 每日复习一轮推几个（backlog ②），想改个数改这里
@@ -170,6 +171,14 @@ var Store = (function () {
     return { correct: all[word].c, wrong: all[word].w };
   }
 
+  // ---------- 答题提示音开关（2026-10-03 小甘要的：默认开，能关）----------
+  // 存 "1" / "0" 两个字符串，读不到就当"开"
+  function getSound() {
+    var v = read(KEYS.sound, "1");
+    return (v === null || v === undefined || v === "") ? true : (String(v) !== "0");
+  }
+  function setSound(on) { write(KEYS.sound, on ? "1" : "0"); }
+
   // ---------- 新词学习进度（backlog ④：中途退出再进来接着做）----------
   // 存当天那批词 + 当前第几个 + 已答对几个；跨天作废，重开新一批
   function saveProgress(state) {
@@ -277,6 +286,8 @@ var Store = (function () {
     saveProgress: saveProgress, loadProgress: loadProgress, clearProgress: clearProgress,
     // 每日复习
     markDaily: markDaily, dailyWords: dailyWords, dailyDue: dailyDue,
+    // 提示音开关
+    getSound: getSound, setSound: setSound,
     // 作答
     attempt: attempt,
     recordNewWord: recordNewWord, recordWrongReview: recordWrongReview, recordDaily: recordDaily,

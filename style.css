@@ -313,6 +313,23 @@ body {
 .fav-btn:disabled { cursor: default; opacity: 0.55; }
 /* 键盘聚焦高亮：Tab 切到按钮时显示蓝框，鼠标点击不显示（更干净） */
 .fav-btn:focus-visible { outline: 3px solid #2f6fed; outline-offset: 2px; }
+/* 答题提示音开关（🔊 / 🔇）*/
+.sound-btn {
+  font-family: inherit;
+  font-size: 22px;
+  line-height: 1;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-soft);
+  padding: 4px 8px;
+  border-radius: 999px;
+  transition: transform 0.15s, background 0.15s, color 0.15s;
+}
+.sound-btn:hover { background: rgba(0, 0, 0, 0.05); }
+.sound-btn:active { transform: scale(0.88); }
+.sound-btn:focus-visible { outline: 3px solid #2f6fed; outline-offset: 2px; }
+
 .fav-btn .star-full { display: none; }        /* 默认显示空心☆ */
 .fav-btn.faved { color: #f5b301; }             /* 收藏后变金黄色实心★ */
 .fav-btn.faved .star-empty { display: none; }
