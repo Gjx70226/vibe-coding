@@ -33,6 +33,9 @@
     <!-- 路由把对应视图的 HTML 塞进这个盒子（四态之"成功/空"都走它） -->
     <div id="content" hidden></div>
 
+    <!-- 云端小格子：把「云连没连上」摆在明面上，点一下能重问（Day 15 板块②） -->
+    <div class="cloud-box" id="cloudBox" hidden></div>
+
     <!-- 出错状态：视图崩了/模拟失败时显示红条+重试（四态之"出错"） -->
     <div class="error-box" id="errorBox" hidden>
       <div class="err-icon">⚠️</div>
@@ -50,6 +53,9 @@
   <!-- 先引入词库与公共层，再引入四个视图，最后引入路由（顺序不能反）
        每个 ?v= 版本号是故意加的：文件名不变时浏览器会拿旧的那份，
        加了版本号浏览器就认为新的是"另一个文件"，必须重新下载 -->
+  <!-- 官方云的小工具（CDN 版，纯网页项目专用）；下面是咱们自己的云检查模块 -->
+  <script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"></script>
+  <script src="cloud.js?v=20261004c"></script>
   <script src="components.js?v=20261003d"></script>
   <script src="store.js?v=20261003d"></script>
   <script src="words.js?v=20261003d"></script>
