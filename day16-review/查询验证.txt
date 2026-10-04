@@ -1,0 +1,42 @@
+Day 16 板块②④ 的真实查询结果（2026-10-04，直接在云端库里跑的，不是我编的）
+
+一、SELECT * FROM plan_days ORDER BY date;   → 5 行
+[
+ {"date":"2026-10-04","id":1,"start_index":0,"target_new":20},
+ {"date":"2026-10-05","id":2,"start_index":20,"target_new":20},
+ {"date":"2026-10-06","id":3,"start_index":40,"target_new":20},
+ {"date":"2026-10-07","id":4,"start_index":60,"target_new":15},
+ {"date":"2026-10-08","id":5,"start_index":75,"target_new":20}
+]
+
+二、SELECT * FROM checkins ORDER BY id;   → 6 行
+[
+ {"id":1,"plan_day_id":1,"word":"abandon","pos":"v","correct_count":1,"wrong_count":0,"status":"mastered","mode":"new"},
+ {"id":2,"plan_day_id":1,"word":"benefit","pos":"n","correct_count":2,"wrong_count":1,"status":"mastered","mode":"new"},
+ {"id":3,"plan_day_id":2,"word":"capable","pos":"adj","correct_count":1,"wrong_count":0,"status":"mastered","mode":"new"},
+ {"id":4,"plan_day_id":2,"word":"delay","pos":"v","correct_count":0,"wrong_count":2,"status":"pending","mode":"wrong"},
+ {"id":5,"plan_day_id":3,"word":"efficient","pos":"adj","correct_count":3,"wrong_count":0,"status":"mastered","mode":"daily"},
+ {"id":6,"plan_day_id":4,"word":"visible","pos":"adj","correct_count":1,"wrong_count":0,"status":"pending","mode":"daily"}
+]
+（plan_day_id 指回 plan_days 的 id —— 这就是两张表那根外键的线）
+
+三、可重复执行检测：把 seed.sql 从头再跑第二遍（删→建→插），然后查数：
+SELECT (SELECT count(*) FROM plan_days) AS plan_rows, (SELECT count(*) FROM checkins) AS checkin_rows;
+→ [{"plan_rows":5,"checkin_rows":6}]      ← 没报错、没翻倍，合格
+
+四、今天真在云端跑过的语句（按顺序，一条一条）：
+1) CREATE TABLE IF NOT EXISTS plan_days (...)
+2) CREATE UNIQUE INDEX IF NOT EXISTS plan_days_date_uq ON plan_days (date)
+3) CREATE TABLE IF NOT EXISTS checkins (... REFERENCES plan_days (id) ON DELETE CASCADE ...)
+4) CREATE UNIQUE INDEX IF NOT EXISTS checkins_day_word_uq ON checkins (plan_day_id, word)
+5) GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.plan_days TO authenticated, anon
+6) GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.checkins TO authenticated, anon
+7) DROP POLICY IF EXISTS plan_days_read_all ON plan_days
+8) CREATE POLICY plan_days_read_all ON plan_days FOR SELECT TO authenticated, anon USING (true)
+9) DROP POLICY IF EXISTS checkins_read_all ON checkins
+10) CREATE POLICY checkins_read_all ON checkins FOR SELECT TO authenticated, anon USING (true)
+11) COMMENT ON TABLE plan_days IS '...'
+12) COMMENT ON TABLE checkins IS '...'
+（口令规则：不登录、不建用户表，所以没有用户字段；只开了"读"，写留给 Day 17/18）
+
+五、没做的：一个接口没写（Day 17 才开始）、前端一个字没动、收藏表没建。
