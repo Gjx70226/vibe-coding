@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>接口查看页 · 四级备考助手</title>
+<link rel="stylesheet" href="style.css?v=20261004c">
+<style>
+  /* 这一页只管自己这一块，颜色圆角跟别处一样走上面的变量，改 :root 就跟着变 */
+  .api-wrap { padding-top: 18px; }
+  .api-h1 { font-size: 22px; font-weight: 700; letter-spacing: .5px; }
+  .api-sub { margin-top: 6px; font-size: 14px; color: var(--text-soft); line-height: 1.7; }
+  .api-card {
+    margin-top: 16px; padding: 16px; background: var(--card-bg);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+  }
+  .api-btns { display: flex; flex-wrap: wrap; gap: 10px; }
+  .api-btn {
+    border: none; border-radius: 999px; padding: 11px 18px; font-size: 15px;
+    background: var(--accent-blue); color: #fff; cursor: pointer;
+    box-shadow: var(--shadow); font-family: inherit;
+  }
+  .api-btn.ghost { background: #fff; color: var(--accent-blue); border: 2px solid var(--accent-blue); box-shadow: none; }
+  .api-btn.warn { background: #fff; color: var(--accent-red); border: 2px solid var(--accent-red); box-shadow: none; }
+  .api-btn:active { transform: translateY(1px); }
+
+  .api-form { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .api-form label { font-size: 14px; color: var(--text-soft); }
+  .api-form input {
+    border: 2px solid #e6e2dc; border-radius: var(--radius-sm);
+    padding: 8px 10px; font-size: 14px; font-family: inherit; color: var(--text);
+    background: #fff;
+  }
+
+  .api-out { margin-top: 14px; }
+  .api-out-title { font-size: 14px; color: var(--text-soft); margin-bottom: 8px; }
+  .api-json {
+    background: #1f2430; color: #e8eef7; border-radius: var(--radius-sm);
+    padding: 14px; font-size: 13px; line-height: 1.6;
+    max-height: 420px; overflow: auto; white-space: pre-wrap; word-break: break-all;
+    font-family: ui-monospace, Consolas, "Courier New", monospace;
+  }
+  .api-json.bad { background: #3a1f1c; color: #ffd9d4; }
+  .api-hint { margin-top: 10px; font-size: 13px; color: var(--text-soft); line-height: 1.7; }
+  .api-foot { margin-top: 18px; padding: 14px 0 40px; font-size: 13px; color: var(--text-soft); text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="blob blob-a"></div>
+<div class="blob blob-b"></div>
+
+<main class="container api-wrap" id="main">
+  <h1 class="api-h1">接口查看页</h1>
+  <p class="api-sub">
+    这一页不干别的，只干一件事：真的去云那头的两张表里把数据取出来，原样打在下面。<br>
+    图上这一屏就是证据——下面那段字是云回的，不是我提前写在页面里的。
+  </p>
+
+  <div class="api-card">
+    <div class="api-btns">
+      <button class="api-btn" id="btnPlan" type="button">取「今日计划」</button>
+      <button class="api-btn" id="btnRec" type="button">取「学习记录」</button>
+      <button class="api-btn ghost" id="btnAgain" type="button">再取一次（照上面的条件）</button>
+      <button class="api-btn warn" id="btnErr" type="button">故意看错误（问 limit=999）</button>
+    </div>
+
+    <div class="api-form">
+      <label for="inDate">查哪一天（留空＝全部）</label>
+      <input type="text" id="inDate" placeholder="2026-10-04" size="11">
+      <label for="inLimit">要几条（1–100）</label>
+      <input type="text" id="inLimit" placeholder="20" size="4">
+    </div>
+
+    <div class="api-out">
+      <div class="api-out-title" id="outTitle">还没取——点上面第一个按钮</div>
+      <pre class="api-json" id="outJson">（空）</pre>
+      <div class="api-hint" id="outHint"></div>
+    </div>
+  </div>
+
+  <div class="api-foot">四级备考助手 · 接口查看页 · 版本 <span id="verFoot">?</span>
+    <span id="verNote"></span>
+  </div>
+</main>
+
+<!-- 顺序不能反：先网上那个云的小工具，再词库、再咱们自己的取数口子 -->
+<script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"></script>
+<script src="words.js?v=20261004c"></script>
+<script src="api.js?v=20261004c"></script>
+<script>
+(function () {
+  "use strict";
+  var VER = "2026-10-04c";
+
+  /* 版本号写死在这一页，截图这一行就知道跑的是哪一版 */
+  document.getElementById("verFoot").textContent = VER;
+  document.getElementById("verNote").textContent = "（主站同一版）";
+
+  var outTitle = document.getElementById("outTitle");
+  var outJson = document.getElementById("outJson");
+  var outHint = document.getElementById("outHint");
+  var inDate = document.getElementById("inDate");
+  var inLimit = document.getElementById("inLimit");
+
+  /* 把云回的那一坨画出来。bad=true 时整块变红底（出错长相） */
+  function paint(title, obj, bad) {
+    outTitle.textContent = title;
+    outJson.className = "api-json" + (bad ? " bad" : "");
+    var txt;
+    try { txt = JSON.stringify(obj, null, 2); } catch (e) { txt = String(obj); }
+    outJson.textContent = txt;
+    if (bad) {
+      outHint.textContent = "上面是「没成」的长相：ok 是 false，错误写在 error（代号）和 msg（人话）里——不是白屏、也不是一堆看不懂的洋文。";
+    } else {
+      outHint.textContent = "上面是云真回的话，一个字没改。改一条库里的数据再点一次「再取一次」，这两段就会不一样。";
+    }
+  }
+
+  function load(kind) {
+    outTitle.textContent = "正在去云里取…";
+    outJson.textContent = "（等云回话）";
+
+    if (kind === "plan") {
+      Api.getPlanToday(function (r) {
+        paint("【今日计划】" + (r && r.ok ? "取到了" : "没取到"), r, !(r && r.ok));
+      });
+    } else if (kind === "rec") {
+      var opt = {};
+      if (inDate.value) opt.date = inDate.value.trim();
+      var lim = inLimit.value.trim();
+      if (lim) opt.limit = lim;
+      Api.getRecords(opt, function (r) {
+        paint("【学习记录】" + (r && r.ok ? "取到了" : "没取到"), r, !(r && r.ok));
+      });
+    } else if (kind === "err") {
+      Api.getRecords({ limit: 999 }, function (r) {
+        paint("【故意问错】limit=999（超上限）", r, !(r && r.ok));
+      });
+    }
+  }
+
+  document.getElementById("btnPlan").onclick = function () { load("plan"); };
+  document.getElementById("btnRec").onclick = function () { load("rec"); };
+  /* 「再取一次」固定照下面这两个框的条件重取学习记录——改了库里的数，点它就看得出变没变 */
+  document.getElementById("btnAgain").onclick = function () { load("rec"); };
+  document.getElementById("btnErr").onclick = function () { load("err"); };
+
+  /* 打开这一页就自己先去云里取一次（先取「今日计划」），省得还要先找按钮。
+     想直接看别的：地址末尾加 #rec = 学习记录，#err = 故意看错误 */
+  var hash = (location.hash || "").replace("#", "");
+  setTimeout(function () { load(hash === "rec" || hash === "err" ? hash : "plan"); }, 800);
+})();
+</script>
+</body>
+</html>

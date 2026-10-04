@@ -1,0 +1,51 @@
+Day 17 板块①（GET 读接口）验证 —— 全篇是跑出来的原话，没修饰。
+跑的时间：2026-10-04 18:5x（北京时间）
+
+怎么跑的：开着本地真页面 http://127.0.0.1:8010/index.html（这个词库、云的小工具
+都是页面自己加载的），再把仓库里这份 api.js 装进去，真发一趟网络去云端那两张表取数。
+脚本：tools/verify_day17.js（jsdom 打开真页面，不是我拿空壳子糊的）
+
+（开头那几行 Could not load script 是 jsdom 加载几个视图页面文件没造成，
+  跟下面六个数无关：词库装好了、云端小工具装好了、api.js 装好了，取数全通。）
+
+① 页面自己装好了没：
+   词库（words.js）： 装好了，1229 个词
+   云的小工具（CDN）： 装好了
+   api.js（仓库里这份）： 装好了，两个读接口都在
+
+② 接口一 今日计划（读 plan_days）:
+   整段回话： {"ok":true,"data":{"date":"2026-10-04","target_new":20,"start_index":0,
+   "words":[{"word":"important","pos":"adj","meaning":"重要的","phonetic":"/ɪmˈpɔːtnt/"},
+   {"word":"develop","pos":"v","meaning":"发展；开发","phonetic":"/dɪˈveləp/"},
+   {"word":"increase","pos":"n","meani..."}
+   ok 位 = true｜data 里：date=2026-10-04，target_new=20，start_index=0，words 给了 20 条
+   头一条词卡： {"word":"important","pos":"adj","meaning":"重要的","phonetic":"/ɪmˈpɔːtnt/"}
+
+③ 接口二 学习记录（默认 limit=20）:
+   ok 位 = true｜total = 6 ｜实际给了 6 条｜offset/limit = 0/20
+   头一条： {"id":7,"plan_day_id":6,"word":"abandon","pos":"v","correct_count":1,
+             "wrong_count":0,"status":"mastered","mode":"new",
+             "created_at":"2026-10-04T13:14:14.786209+08:00"}
+
+④ 接口二 带 date=2026-10-04&offset=0&limit=2:
+   total = 6 ｜实际给了 2 条（<=2 就是 limit 生效了）
+   头一条： {"id":8,"plan_day_id":6,"word":"benefit","pos":"n","correct_count":2,
+             "wrong_count":1,"status":"mastered","mode":"new",
+             "created_at":"2026-10-04T13:14:14.786209+08:00"}
+
+⑤ 故意传 limit=999:
+   整段回话： {"ok":false,"error":"bad_request","msg":"limit 不能大于 100"}
+
+⑥ 故意问一张瞎写的表:
+   云端原话（没经过本文件）： {"code":"DATABASE_PGRST205",
+     "message":"Could not find the table 'public.这张表其实是瞎写的' in the schema cache",
+     "requestId":"9233b6be-…"}
+   经过 api.js 翻成： {"ok":false,"error":"server","msg":"云里查不到这张表（多半是表还没建）"}
+
+── 这六条各证明了啥 ────────────────────────────────
+② 成功了的长相是 {ok:true, data:{...}}，数据装在 data 里；words 那 20 条是从
+   本地词库照 start_index 数出来的真词卡（important / develop / increase…）
+③ 读的就是云端 checkins 那 6 条记录（abandon、benefit…），不是我写死的
+④ limit / offset / date 三个参数真的作用上了（要 2 条就只给 2 条）
+⑤ 参数不对时回 {ok:false, error:代号, msg:人话}，不是白屏、不是英文堆栈
+⑥ 云端回英文 → api.js 翻成中文人话

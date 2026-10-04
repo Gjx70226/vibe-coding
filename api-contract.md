@@ -4,6 +4,7 @@
 > 后端照着它做，前端照着它调，两边谁也不猜谁。
 > **Day 15 那天一个接口都没实现，全部只登记占位。**
 > **Day 16：表已真建在云端（`plan_days` / `checkins`），种子数据已灌入（5 天计划 + 6 条记录），下面第二节就是最终版表结构。**
+> **Day 17：第一次真读云端——两个读接口已实现（`getPlanToday` / `getRecords`），第八节写了全盘对照，哪条做了哪条没做都在那张表里。**
 
 ---
 
@@ -81,9 +82,9 @@
 | 页面动作 | 窗口 | 今天 |
 |---|---|---|
 | 看首页四个数字（今天学了几个 / 待复习 / 已学 / 正确率） | `GET /api/summary` | 占位 |
-| 点「新词学习」拿今天这一批词 | `GET /api/plan/today` | 占位 |
-| 答完一个词（对几次错几次） | `POST /api/records` | 占位 |
-| 看词表统计（1229 个词 + 每个词对/错次数） | `GET /api/words?offset=&limit=` | 占位 |
+| 点「新词学习」拿今天这一批词 | `GET /api/plan/today` | **已实现（换做法）** Days 17 |
+| 答完一个词（对几次错几次） | `POST /api/records` | 占位（Day 18） |
+| 看词表统计（1229 个词 + 每个词对/错次数） | `GET /api/words?offset=&limit=` | 占位（Day 20） |
 | 看错题本（待复习 / 已掌握） | `GET /api/wrong?status=` | 占位 |
 | 错题复习答对 → 改状态 | `PATCH /api/wrong/:id` | 占位 |
 | 收藏 / 取消收藏一个词 | `POST` / `DELETE /api/favorites/:word` | 占位 |
@@ -116,7 +117,7 @@ Could not find the table 'public.health_probe'
 
 ---
 
-## 五、窗口名册（Day 16～21 照这个实现；今天全空，一个没做）
+## 五、窗口名册（Day 16～21 照这个实现；Day 17 实现了两条，其余还空着）
 
 > 约定：**表里没有用户字段**（Day 16 起生效，前面那版写着 `user_id` 固定为 1，已作废）；
 > 报错一律返回下面的"错误形状"。
@@ -142,9 +143,10 @@ Could not find the table 'public.health_probe'
 | 项 | 内容 |
 |---|---|
 | 请求参数 | 无（取今天的计划） |
-| 成功回啥 | `{"date":"2026-10-04","target_new":10,"words":[{"word":"important","pos":"adj","meaning":"重要的；重大的","phonetic":"/ɪmˈpɔːtnt/"}, ...]}` |
-| 没计划时 | `{"ok":true,"empty":true,"msg":"今天还没开始，先建个计划"}`（**不是报错**，是正常空） |
-| 错误回啥 | `{"ok":false,"error":"server","msg":"<原因>"}`，HTTP 500 |
+| 成功回啥 | `{"ok":true,"data":{"date":"2026-10-04","target_new":10,"start_index":0,"words":[{"word":"important","pos":"adj","meaning":"重要的；重大的","phonetic":"/ɪmˈpɔːtnt/"}, ...]}}` |
+| 没计划时 | `{"ok":true,"data":{"empty":true,"msg":"今天还没开始，先建个计划"}}`（**不是报错**，是正常空） |
+| 错误回啥 | `{"ok":false,"error":"server","msg":"云里查不到这张表（多半是表还没建）"}`，HTTP 500 |
+| **Day 17 实做** | 已实现（换做法）：第 3 册里这一条的**数据装在 `data` 里**，不是平铺（Day 17 那天跟清单的 `{ok,data,error}` 打架，按本契约走）。**`words` 那串词是本地词库照 `start_index`+`target_new` 数出来的，不是云给的真数据**，Day 20 才把词搬进表里 |
 
 ### 4）`POST /api/plan` —— 建 / 改今天的计划
 
@@ -170,9 +172,10 @@ Could not find the table 'public.health_probe'
 | 项 | 内容 |
 |---|---|
 | 请求参数 | `date`（可省）、`offset` 从第几条开始、`limit` 一次几条（默认 20，最多 100） |
-| 成功回啥 | `{"ok":true,"total":882,"items":[{"id":882,"word":"important","correct_count":2,"wrong_count":1,"status":"pending","mode":"new","created_at":"..."}]}` |
-| 空 | `{"ok":true,"items":[],"total":0}`（**不是报错**） |
-| 错误回啥 | `{"ok":false,"error":"bad_request","msg":"limit 太大"}`，HTTP 400 |
+| 成功回啥 | `{"ok":true,"data":{"total":882,"offset":0,"limit":20,"items":[{"id":882,"word":"important","correct_count":2,"wrong_count":1,"status":"pending","mode":"new","created_at":"..."}]}}` |
+| 空 | `{"ok":true,"data":{"items":[],"total":0}}`（**不是报错**） |
+| 错误回啥 | `{"ok":false,"error":"bad_request","msg":"limit 不能大于 100"}`，HTTP 400 |
+| **Day 17 实做** | 已实现（换做法）：参数全当值交给云（**参数化，没拼字符串**）；`date` 是靠那天 0 点到 23:59 圈出来的（记录表里没有「哪天」这一列，只有答题那一刻的时间）；`select("*")` 会多带 `plan_day_id`、`pos` 两个本契约没勾的字段，Day 20 收窄成白名单 |
 
 ### 7）`GET /api/words/:word` —— 单词详情
 
@@ -265,7 +268,25 @@ Could not find the table 'public.health_probe'
 
 ---
 
-## 八、Day 15 完成标准对照（照实写的）
+## 八、Day 17 完成状态（照实写）
+
+| 清单要求 | 本项目实做 | 状态 |
+|---|---|---|
+| 实现契约里登记的 GET 读接口 | 两条：`getPlanToday`（读 `plan_days`）、`getRecords`（读 `checkins`，带哪天/从第几条/要几条） | ✅ 已实现（换做法） |
+| 响应统一 `{ok, data, error}` 形状 | 成了 `{ok:true, data:{...}}`；砸了 `{ok:false, error:"代号", msg:"人话"}` | ✅ |
+| SQL 参数化、禁止拼字符串 | 参数当值交给云那头，没有拼起来的字 | ✅ |
+| 改一条库数据，接口跟着变 | **真做了三轮**：第①次（目标20/答对1）→ 改云里两行（目标7/答对88）→ 第②次立刻变成 7/88 → 改回 → 第③次回到 20/1。原话存 `day17-review/板块④-第1/2/3次-*.txt` | ✅ |
+| 出错时 `{ok:false,error}`，中文说明、不白屏 | 故意传 `limit=999` → `{"ok":false,"error":"bad_request","msg":"limit 不能大于 100"}`；故意问瞎写的表 → 英文 `Could not find the table…` 被翻成「云里查不到这张表（多半是表还没建）」 | ✅ |
+| 契约里把该接口标「已实现」 | 就是这份第八节 + 第三节 + 第五节的 3、6 两条 | ✅ |
+| `GET /api/hot` 返回当日真实热搜 | **没做，也不做**：那是清单的教学例子，本项目是记单词，不是热搜 | ❌ 不做 |
+| `GET /api/favorites` 返回收藏列表 | **没做**：收藏表 `favorites` 契约里登记在 Day 19，云端还没建，今天写只会报"找不到表"。已记入待办 | ❌ 顺延 Day 19 |
+| 地址栏敲网址直接看到 JSON | 云那头的门只认"贴身带的钥匙"，不认挂在网址后面的（4 种写法都试过，全被挡）。改用 `api.html` 小页打开看真实数据 | ❌ 换做法 |
+
+**今天没做的**：写接口（Day 18 开始）；改表结构；把 `words` 搬进表（Day 20）；`favorites` 表（Day 19）。
+
+---
+
+## 九、Day 15 完成标准对照（照实写的）
 
 | 清单要求 | 本项目 | 状态 |
 |---|---|---|

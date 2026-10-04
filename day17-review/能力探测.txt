@@ -1,0 +1,75 @@
+Day 17（开工前）先把这条路云能做什么、不能做什么用真请求试了一遍。
+下面每一行都是真发出去的请求 + 云端/站点回的原话，不是猜的。
+探测时间：2026-10-04 18:4x（北京时间）
+
+被测地址：https://cet4-work-helper 同域 —— 站点 https://cet4-word-helper.app.workbuddy.host
+云端钥匙：wbpk_O12WtR6v99Wu8kmCZRjKgH_sg9Rb6ux7sTaa09hgVS0BCVep93u20G3
+（这把钥匙本来就公开在项目 cloud.js 里，不是偷来的）
+
+── 一、有没有「自己起名字的窗口」（云函数 / 自定义接口）───────────
+
+请求                                      返回
+/.cloud/functions                        404 {"error":"invalid_request",...not available}
+/.cloud/functions/                       404 同上
+/.cloud/edge                             404 同上
+/.cloud/edge/functions                   404 同上
+/.cloud/rpc                              404 同上
+/.cloud/database/rpc/any                 404 INVALID_PATH（PostgREST 只认 /v1/rdb/rest）
+/.cloud/database/function                404 INVALID_PATH
+/.cloud/files                            404 not available
+/api/health                              404 静态站 HTML（python http.server 风格 404）
+/api/hot                                 404 静态站 HTML
+/api/favorites                           404 静态站 HTML
+/rest/v1/rpc                             404 静态站 HTML
+
+结论 1：这条路上**没有自己起名字的窗口**（没有云函数）。 Day 15 那句判断不变。
+
+── 二、唯一能读数的口子长什么样 ──────────────────────────────────
+
+/.cloud/database/rest                    200 （PostgREST 的目录页）
+/.cloud/database/rest/plan_days?select=*&limit=2
+    200  [{"id":6,"date":"2026-10-04","target_new":20,"start_index":0,
+          "created_at":"2026-10-04T13:14:06.839937+08:00"},
+          {"id":7,"date":"2026-10-05",...}]      ← 真数据，5 行里前 2 行
+/.cloud/database/rest/checkins?select=*&limit=1  200 真数据
+
+结论 2：读数的唯一口子是 `/.cloud/database/rest/<表名>?select=&limit=&offset=&order=`，
+        返回的是**纯数组**（里头没有 ok / data / error 这三样）。
+
+── 三、能不能在浏览器地址栏直接打开接口（最关键的一条）─────────────
+
+不带钥匙（= 地址栏直接敲地址，浏览器没法给你加请求头）：
+/.cloud/database/rest/plan_days?select=*&limit=1    401
+/.cloud/database/rest/checkins?select=*&limit=1     401
+    {"error":"invalid_client",
+     "error_description":"the client credential is invalid or revoked"}
+
+把钥匙挂在网址末尾试试（4 种写法都试了）：
+?apikey=<key>                                       401
+?access_key=<key>                                   401
+?key=<key>                                          401
+?api_key=<key>                                      401
+    {"error":"invalid_client","error_description":"...invalid or revoked"}
+
+结论 3：**地址栏打不开**。 这把钥匙只认「请求头」，不认网址。
+        所以「在浏览器地址栏敲网址 → 看到 JSON」这条路，在这条路上走不通。
+
+── 四、页面（前端代码）里读，通不通 ───────────────────────────────
+
+/.cloud/database/rest/checkins  OPTIONS（带自定义头 x-wb-webapp-access-key）→ 204 放行
+/.cloud/database/rest/checkins  OPTIONS（简单头）                          → 204 放行
+/.cloud/database/rest/checkins?select=*&limit=1
+    （带 x-wb-webapp-access-key 请求头）                                   200 真数据
+
+结论 4：页面里 fetch 能读，且**页面和云端口子同一个网址（同源）**，不用跨域名那一套。
+
+── 五、汇总：清单今天要的四件事，这个路能交几件 ──────────────────
+
+清单要求                                     这条路行不行
+① 公网打开 GET /api/hot 看到 {ok:true,data:[]}   ✗ 给不了 /api 这名字（没云函数）
+② 改一条库里的数据，接口返回值跟着变            ✓ 能做到（口子读的就是真库）
+③ 出错返回 {ok:false,error:"中文说明"}          ✓ 能做到（在页面这层包出来，不是云端给的）
+④ 契约里该接口标「已实现」                      ✓ 照实写「已实现（换做法）」
+⑤ 地址栏直接敲地址看到 JSON                     ✗ 401（钥匙只认请求头）
+
+（探测脚本没留在仓库里，是本轮临时跑的；上面全是它打出来的原话）

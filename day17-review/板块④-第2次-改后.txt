@@ -1,0 +1,12 @@
+云的小工具：从网上现拿 62057 字节（跟线上页面同一个包）
+  云的小工具：装好没：装好了
+  词库：装好了（1229 个词，本地那份，跟云没关系）
+  读接口 api.js：装好了
+
+===== 第 ② 次：我把云里两行改了（plan_days 目标 20→7、abandon 答对 1→88） =====  （下面这段字是同一份代码跑出来的，代码一个字没动）
+  今日计划 → ok=true date=2026-10-04 target_new=7 start_index=0 念出来的词 count=7
+  前三个词：important / develop / increase
+  学习记录 → ok=true total=6 取回 6 条
+  其中 abandon 这条：{"id":7,"plan_day_id":6,"word":"abandon","pos":"v","correct_count":88,"wrong_count":0,"status":"mastered","mode":"new","created_at":"2026-10-04T13:14:14.786209+08:00"}
+
+【这一轮快照】target_new=7 / abandon.correct_count=88 / 念出来的词数=7
