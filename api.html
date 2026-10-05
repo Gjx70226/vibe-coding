@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>接口查看页 · 四级备考助手</title>
-<link rel="stylesheet" href="style.css?v=20261004c">
+<link rel="stylesheet" href="style.css?v=20261005a">
 <style>
   /* 这一页只管自己这一块，颜色圆角跟别处一样走上面的变量，改 :root 就跟着变 */
   .api-wrap { padding-top: 18px; }
@@ -45,6 +45,9 @@
   }
   .api-json.bad { background: #3a1f1c; color: #ffd9d4; }
   .api-hint { margin-top: 10px; font-size: 13px; color: var(--text-soft); line-height: 1.7; }
+  /* Day 18 板块①：写入这一块跟上面「取数」隔开，虚线一划，一眼分得开 */
+  .api-write { margin-top: 20px; padding-top: 16px; border-top: 1px dashed #d8d2c9; }
+  .api-write-tag { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
   .api-foot { margin-top: 18px; padding: 14px 0 40px; font-size: 13px; color: var(--text-soft); text-align: center; }
 </style>
 </head>
@@ -75,6 +78,34 @@
       <input type="text" id="inLimit" placeholder="20" size="4">
     </div>
 
+    <div class="api-write">
+      <div class="api-write-tag">写入（Day 18：往云里那张「学习记录」记一笔）</div>
+      <div class="api-form">
+        <label for="inPid">哪天（计划表行号）</label>
+        <input type="text" id="inPid" placeholder="6" size="3">
+        <label for="inWord">哪个词</label>
+        <input type="text" id="inWord" placeholder="important" size="11">
+        <label for="inPos">词性（可省）</label>
+        <input type="text" id="inPos" placeholder="adj" size="4">
+        <label for="selRight">答对还是答错</label>
+        <select id="selRight">
+          <option value="true">答对</option>
+          <option value="false">答错</option>
+        </select>
+        <label for="selMode">从哪来</label>
+        <select id="selMode">
+          <option value="new">new 新词</option>
+          <option value="wrong">wrong 错题</option>
+          <option value="daily">daily 每日</option>
+        </select>
+      </div>
+      <div class="api-btns">
+        <button class="api-btn" id="btnPost" type="button">记一笔</button>
+        <button class="api-btn ghost" id="btnDup" type="button">原样再记一笔（测防重复）</button>
+        <button class="api-btn warn" id="btnMiss" type="button">故意漏掉「哪个词」（测校验）</button>
+      </div>
+    </div>
+
     <div class="api-out">
       <div class="api-out-title" id="outTitle">还没取——点上面第一个按钮</div>
       <pre class="api-json" id="outJson">（空）</pre>
@@ -89,12 +120,12 @@
 
 <!-- 顺序不能反：先网上那个云的小工具，再词库、再咱们自己的取数口子 -->
 <script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"></script>
-<script src="words.js?v=20261004c"></script>
-<script src="api.js?v=20261004c"></script>
+<script src="words.js?v=20261005a"></script>
+<script src="api.js?v=20261005a"></script>
 <script>
 (function () {
   "use strict";
-  var VER = "2026-10-04c";
+  var VER = "2026-10-05a";
 
   /* 版本号写死在这一页，截图这一行就知道跑的是哪一版 */
   document.getElementById("verFoot").textContent = VER;
@@ -105,6 +136,25 @@
   var outHint = document.getElementById("outHint");
   var inDate = document.getElementById("inDate");
   var inLimit = document.getElementById("inLimit");
+  var inPid = document.getElementById("inPid");
+  var inWord = document.getElementById("inWord");
+  var inPos = document.getElementById("inPos");
+  var selRight = document.getElementById("selRight");
+  var selMode = document.getElementById("selMode");
+
+  /* 把上面那排框里的东西凑成一个「要往云里记啥」的单子。
+     missWord=true 就是故意把「哪个词」那格留空，用来看校验挡不挡 */
+  function postOpt(missWord) {
+    var o = {
+      plan_day_id: inPid.value.trim(),
+      word: missWord ? "" : inWord.value.trim(),
+      is_correct: selRight.value === "true",
+      mode: selMode.value
+    };
+    var pv = inPos.value.trim();
+    if (pv) o.pos = pv;
+    return o;
+  }
 
   /* 把云回的那一坨画出来。bad=true 时整块变红底（出错长相） */
   function paint(title, obj, bad) {
@@ -140,6 +190,10 @@
       Api.getRecords({ limit: 999 }, function (r) {
         paint("【故意问错】limit=999（超上限）", r, !(r && r.ok));
       });
+    } else if (kind === "post" || kind === "postmiss") {
+      Api.addRecord(postOpt(kind === "postmiss"), function (r) {
+        paint("【记一笔】" + (r && r.ok ? "写进去了" : "没写成"), r, !(r && r.ok));
+      });
     }
   }
 
@@ -148,6 +202,11 @@
   /* 「再取一次」固定照下面这两个框的条件重取学习记录——改了库里的数，点它就看得出变没变 */
   document.getElementById("btnAgain").onclick = function () { load("rec"); };
   document.getElementById("btnErr").onclick = function () { load("err"); };
+  document.getElementById("btnPost").onclick = function () { load("post"); };
+  /* 「原样再记一笔」跟上面那颗走的是同一份条件（哪个词、哪天、对不对都一样），
+     就差这一下是第二次——第二次该被那道防重复的手挡住 */
+  document.getElementById("btnDup").onclick = function () { load("post"); };
+  document.getElementById("btnMiss").onclick = function () { load("postmiss"); };
 
   /* 打开这一页就自己先去云里取一次（先取「今日计划」），省得还要先找按钮。
      想直接看别的：地址末尾加 #rec = 学习记录，#err = 故意看错误 */

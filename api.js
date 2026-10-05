@@ -1,10 +1,11 @@
 /* ============================================================
-   ① 今天解决什么问题：页面要的数据改成从云端真表里取，不再只念自己
-      手机里那个本子（Day 17 板块①：第一批读取接口）
-   ② 为什么这么选：这条云没有「自己起名字的窗口」（Day 15 查实的），
-      只能老老实实从那两张表里取。所以把「取」这件事收到本文件一个
-      口子里，回话只有一种长相：成了 ok:true + 数据，砸了 ok:false + 人话。
-   ③ 今天不做啥：不写（Day 18 才做）；不改表结构；不接页面（Day 20 才换真实数据）。
+   ① 今天解决什么问题：能不能真往云里那张表写一行（Day 18 板块①：第一个写入接口）
+   ② 为什么这么选：重复提交用「先看有没有那行 → 有就在原行上把对/错次数 +1，
+      没有才新开一行」，不靠云那条唯一约束硬挡——云那道门槛只管「能不能再插一行」，
+      不管「次数该不该加」，硬挡了当天就没法再练一遍（你拍的 A 方案）。
+      手滑连点另用 3 秒窗口挡（同一个词 + 同一天 + 同一对错，几秒内原样再来＝重复提交）。
+   ③ 今天不做啥：不发版（板块② 才发）；不接主站页面（Day 20 才换真实数据）；
+      不做 PATCH / DELETE / 批量写（第四周）。
    ============================================================ */
 
 (function (global) {
@@ -18,6 +19,13 @@
 
   var DEFAULT_LIMIT = 20;   // 一次默认给几条
   var MAX_LIMIT = 100;      // 一次最多给几条（再多容易把手机卡住）
+  var MAX_WORD_LEN = 100;   // 一个词最多几个字（超了当瞎填，直接拒）
+  var MODES = ["new", "wrong", "daily"];  // mode 只准这三个（表里也有这道 CHECK）
+  var DUP_WINDOW_MS = 3000; // 几秒内同一条原样再来＝手滑重复提交（想换长短改这个数）
+
+  /* 手滑连点那道关要记一下「上次记的是啥」，页面自己不碰它 */
+  var lastKey = "";
+  var lastAt = 0;
 
   var client = null;
 
@@ -58,6 +66,8 @@
       return fail("server", "云里查不到这张表（多半是表还没建）");
     }
     if (code === "42501") return fail("server", "这张表不给你看（权限没配好）");
+    /* 23503：插的那行的「哪天」在计划表里根本不存在（外键约束没过） */
+    if (code === "23503") return fail("bad_request", "填的那个「哪天」在每日计划表里没有这一行（plan_day_id 得是计划表里真存在的一行号）");
     if (code === "23505") return fail("conflict", "同一天记了两条，撞上了");
     if (code === "22P02" || code === "42883") return fail("bad_request", "传的东西类型不对：" + raw);
     return fail("server", raw);
@@ -179,6 +189,135 @@
       })["catch"](function (e) {
         cb(fail("server", "问云的时候断气了（多半是断网）"));
       });
+    },
+
+    /* 接口三：记一笔 —— 往 checkins 那张表写一个新行（Day 18 板块①：第一个写入接口）
+       要带的东西：plan_day_id（哪天，必填）、word（哪个词，必填）、is_correct（对/错，必填）、
+                   pos（词性，可省）、mode（哪来的 new/wrong/daily，默认 new）
+       回的还是那一种长相：成了 {ok:true, data:{id, word, correct, wrong, action}}
+           action = insert（新开了一行）或 update（今天已经记过这行，在原行上加了次数）
+       今天防两种「重复」：
+         1) 同一天同一个词已经有行了 → 不加新行，在那行上把对/错次数 +1（A 方案，你拍的）
+         2) 同一条请求几秒内原样又来一遍（手滑连点）→ 不碰云先挡回，别让云写两遍 */
+    addRecord: function (opt, cb) {
+      opt = opt || {};
+      cb = cb || function () {};
+
+      /* ---- 第一关：看输入对不对，错了回人话（不联网，先挡住） ---- */
+      var rawDay = (opt.plan_day_id === undefined || opt.plan_day_id === null) ? "" : String(opt.plan_day_id).trim();
+      if (!rawDay) { cb(fail("bad_request", "少了 plan_day_id（得写清这条记的是哪一天）")); return; }
+      var pid = parseInt(rawDay, 10);
+      if (isNaN(pid) || pid <= 0) {
+        cb(fail("bad_request", "plan_day_id 得是个数字（每日计划表里的行号），你填的是「" + rawDay + "」"));
+        return;
+      }
+
+      var word = (opt.word === undefined || opt.word === null) ? "" : String(opt.word).trim();
+      if (!word) { cb(fail("bad_request", "少了 word（没写记的是哪个词）")); return; }
+      if (word.length > MAX_WORD_LEN) {
+        cb(fail("bad_request", "word 太长了（最多 " + MAX_WORD_LEN + " 个字），你填了 " + word.length + " 个"));
+        return;
+      }
+
+      var c0 = opt.is_correct;
+      var isTrue = (c0 === true || c0 === 1 || String(c0) === "true");
+      var isFalse = (c0 === false || c0 === 0 || String(c0) === "false");
+      if (!isTrue && !isFalse) {
+        cb(fail("bad_request", "is_correct 只能填 true（答对）或 false（答错），你填的是「" + String(c0) + "」"));
+        return;
+      }
+      var addCorrect = isTrue ? 1 : 0;
+      var addWrong = isTrue ? 0 : 1;
+
+      var mode = (opt.mode === undefined || opt.mode === null || String(opt.mode).trim() === "") ? "new" : String(opt.mode).trim();
+      if (MODES.indexOf(mode) < 0) {
+        cb(fail("bad_request", "mode 只能是 " + MODES.join(" / ") + " 这三个之一，你填的是「" + mode + "」"));
+        return;
+      }
+      var pos = (opt.pos === undefined || opt.pos === null || String(opt.pos).trim() === "") ? null : String(opt.pos).trim();
+
+      /* ---- 第二关：手滑连点（同一条原样几秒内又来一遍） ---- */
+      var key = pid + "|" + word + "|" + addCorrect;
+      var now = Date.now();
+      if (key === lastKey && (now - lastAt) < DUP_WINDOW_MS) {
+        cb(fail("conflict", "这条刚记过了（" + (DUP_WINDOW_MS / 1000) + " 秒内跟上一次一模一样），别重复提交"));
+        return;
+      }
+      lastKey = key;
+      lastAt = now;
+
+      /* ---- 第三关：去云里写 ---- */
+      var c = getClient();
+      if (!c) { cb(fail("server", "云的小工具没加载出来")); return; }
+
+      var q = null;
+      try {
+        q = c.database.from("checkins")
+          .select("id,correct_count,wrong_count")
+          .eq("plan_day_id", pid)
+          .eq("word", word)
+          .maybeSingle();
+      } catch (e0) { cb(fail("server", "问云的话没发出去")); return; }
+      if (!q || typeof q.then !== "function") { cb(fail("server", "云的小工具没接上")); return; }
+
+      q.then(function (out) {
+        var err = out && out.error;
+        if (err) { cb(readCloudErr(err)); return; }
+
+        var row = out && out.data;
+
+        if (row && row.id) {
+          /* 今天这行已经记过了 —— 加次数，不新开一行（A 方案：答对就加对 1 次） */
+          var nc = (Number(row.correct_count) || 0) + addCorrect;
+          var nw = (Number(row.wrong_count) || 0) + addWrong;
+          var q2 = null;
+          try {
+            q2 = c.database.from("checkins").update({ correct_count: nc, wrong_count: nw })
+              .eq("id", row.id).select("id,correct_count,wrong_count").maybeSingle();
+          } catch (e1) { cb(fail("server", "改次数的话没发出去")); return; }
+          if (!q2 || typeof q2.then !== "function") { cb(fail("server", "云的小工具没接上")); return; }
+          q2.then(function (o2) {
+            var e2 = o2 && o2.error;
+            if (e2) { cb(readCloudErr(e2)); return; }
+            var r2 = (o2 && o2.data) || {};
+            cb(ok({
+              id: r2.id || row.id,
+              word: word,
+              correct: Number(r2.correct_count || nc),
+              wrong: Number(r2.wrong_count || nw),
+              action: "update"
+            }));
+          })["catch"](function () { cb(fail("server", "改次数的时候断气了（多半是断网）")); });
+          return;
+        }
+
+        /* 今天还没记过这行 —— 新开一行 */
+        var q3 = null;
+        try {
+          q3 = c.database.from("checkins").insert({
+            plan_day_id: pid,
+            word: word,
+            pos: pos,
+            correct_count: addCorrect,
+            wrong_count: addWrong,
+            status: "pending",
+            mode: mode
+          }).select("id,correct_count,wrong_count").single();
+        } catch (e3) { cb(fail("server", "写的话没发出去")); return; }
+        if (!q3 || typeof q3.then !== "function") { cb(fail("server", "云的小工具没接上")); return; }
+        q3.then(function (o3) {
+          var e3 = o3 && o3.error;
+          if (e3) { cb(readCloudErr(e3)); return; }
+          var r3 = (o3 && o3.data) || {};
+          cb(ok({
+            id: r3.id,
+            word: word,
+            correct: Number(r3.correct_count || addCorrect),
+            wrong: Number(r3.wrong_count || addWrong),
+            action: "insert"
+          }));
+        })["catch"](function () { cb(fail("server", "写的时候断气了（多半是断网）")); });
+      })["catch"](function () { cb(fail("server", "问云的时候断气了（多半是断网）")); });
     }
   };
 

@@ -1,0 +1,22 @@
+【第一关：输入不对时，云那头还没被碰到，先看你回的是不是人话】
+  第 1 种（漏掉『哪个词』）→ ok:false / bad_request / 少了 word（没写记的是哪个词）
+  第 2 种（漏掉『哪天』）→ ok:false / bad_request / 少了 plan_day_id（得写清这条记的是哪一天）
+  第 3 种（词超长）→ ok:false / bad_request / word 太长了（最多 100 个字），你填了 101 个
+  第 4 种（对错瞎填）→ ok:false / bad_request / is_correct 只能填 true（答对）或 false（答错），你填的是「可能对」
+  第 5 种（来源瞎填）→ ok:false / bad_request / mode 只能是 new / wrong / daily 这三个之一，你填的是「乱填」
+
+【第二关：云里还没这个词的记录 → 应该新开一行（insert）】
+  回话：{"ok":true,"data":{"id":90210,"word":"important","correct":1,"wrong":0,"action":"insert"}}
+    insert 一行 → 哪天6 词important 对1 错0 mode=new
+    insert 回：id=90210
+
+【第三关：云里已经有这个词的记录了（对2 错1）→ 应该加次数，不新开行】
+  回话：{"ok":true,"data":{"id":7,"word":"important","correct":2,"wrong":1,"action":"update"}}
+  云那边收到的命令：
+    update 次数 → 对3 错1
+  行数有没有新开一行？没有，只改了原来那行的次数
+
+【第四关：同一条一模一样的请求，连着发两遍（手滑多点了一下）】
+  第一次：{"ok":true,"data":{"id":90210,"word":"important","correct":1,"wrong":0,"action":"insert"}}
+  第二次：{"ok":false,"error":"conflict","msg":"这条刚记过了（3 秒内跟上一次一模一样），别重复提交"}
+  第二次是不是被挡了？是，error=conflict，云根本没收到第二次

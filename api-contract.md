@@ -5,6 +5,7 @@
 > **Day 15 那天一个接口都没实现，全部只登记占位。**
 > **Day 16：表已真建在云端（`plan_days` / `checkins`），种子数据已灌入（5 天计划 + 6 条记录），下面第二节就是最终版表结构。**
 > **Day 17：第一次真读云端——两个读接口已实现（`getPlanToday` / `getRecords`），第八节写了全盘对照，哪条做了哪条没做都在那张表里。**
+> **Day 18：第一次真写云端——写入接口 `addRecord` 已实现（往 `checkins` 写一行，带校验 / 防重复 / 中文错误），第五节 5 条 + 5-1 节就是最终口径，第九节是全盘对照。**
 
 ---
 
@@ -83,7 +84,7 @@
 |---|---|---|
 | 看首页四个数字（今天学了几个 / 待复习 / 已学 / 正确率） | `GET /api/summary` | 占位 |
 | 点「新词学习」拿今天这一批词 | `GET /api/plan/today` | **已实现（换做法）** Days 17 |
-| 答完一个词（对几次错几次） | `POST /api/records` | 占位（Day 18） |
+| 答完一个词（对几次错几次） | `POST /api/records` | ✅ 已实现（换做法）Day 18 |
 | 看词表统计（1229 个词 + 每个词对/错次数） | `GET /api/words?offset=&limit=` | 占位（Day 20） |
 | 看错题本（待复习 / 已掌握） | `GET /api/wrong?status=` | 占位 |
 | 错题复习答对 → 改状态 | `PATCH /api/wrong/:id` | 占位 |
@@ -166,6 +167,16 @@ Could not find the table 'public.health_probe'
 | `is_retry` | 同一题第 2、3 次尝试。**重试只累计逐词对错，不再加当天的新学数 / 正确率** |
 | 第一次选错 | **立刻写记录表**（入库跟重试次数解耦，这是 Day 14 定的规矩） |
 | 错误回啥 | `{"ok":false,"error":"bad_request","msg":"word 不能为空"}`，HTTP 400 |
+| **Day 18 实做** | 已实现（换做法）：名字叫 `Api.addRecord({plan_day_id, word, is_correct, pos, mode})`，返回长相改成本契约第 6 节那个 `{"ok":true,"data":{...}}`（带 `action`：`insert` 新开了一行 / `update` 原行加了次数）。**防重复按下节「防重复口径」走**：同一天同一个词已有行 → 在原行上把对/错次数 +1（**不加新行**，这是你拍的 A 方案，跟 Day 14「重试只累计逐词对错」一条）；另有 `DUP_WINDOW_MS = 3000` 的 3 秒窗口挡「同一条原样连点两下」（挡住时根本不发云，回 `conflict`） |
+
+### 5-1）防重复口径（Day 18 定，以后所有写接口照这个标准）
+
+| 情况 | 云里发生啥 | 回啥 |
+|---|---|---|
+| 这一行今天从没记过 | 新开一行（insert） | `ok:true, action:"insert"` |
+| 这一行今天已经记过，隔一会儿再练一遍 | 原行对/错次数 +1（**行数不变**） | `ok:true, action:"update"` |
+| 同一条请求 3 秒内原样又发一遍 | 啥也不发生（连云都不问） | `ok:false, error:"conflict", msg:"这条刚记过了…"` |
+| 缺必填字段 / 超长 / 对错瞎填 / mode 瞎填 | 啥也不发生 | `ok:false, error:"bad_request", msg:"中文，说出缺了啥"` |
 
 ### 6）`GET /api/records?date=&offset=&limit=` —— 记录表读取（第 17 天做）
 
@@ -286,7 +297,23 @@ Could not find the table 'public.health_probe'
 
 ---
 
-## 九、Day 15 完成标准对照（照实写的）
+## 九、Day 18 完成状态（照实写）
+
+| 清单要求 | 本项目 | 状态 |
+|---|---|---|
+| 正常 POST 返回 `{ok:true,...}` 且形状跟契约一致 | `{"ok":true,"data":{"id":13,"word":"important","correct":4,"wrong":0,"action":"insert"}}` —— 数据装在 `data` 里，形状同第 6 节 | ✅ |
+| 数据库真的多一行 | 云里 `checkins` 今天（2026-10-05）从 0 行变 1 行，新行 `id=13 / plan_day_id=6 / word=important / pos=adj / correct_count / wrong_count / status / mode / created_at` | ✅ 真库 `tools/verify_day18_realdb.js` 跑出原话 |
+| 重复提交被拒 | 同一条 3 秒内原样再发 → `{"ok":false,"error":"conflict","msg":"这条刚记过了…"}`，行数没变 | ✅ |
+| 缺必填字段被拒且提示是中文 | 漏掉 `word` → `{"ok":false,"error":"bad_request","msg":"少了 word（没写记的是哪个词）"}` | ✅ |
+| 写完再读回来（读写闭环） | 调 `getRecords` 能读回 `id=13` 这一行 | ✅ |
+
+**今天没做的**：PATCH / DELETE / 批量写（第四周）；改状态；`favorites` 收藏表（Day 19）；把词搬进云表（Day 20）；主站页面接真实写入（Day 20 才换）。
+
+**一处照实记的偏差**：第一次截图那次点击，云里对的次数从 2 跳到 4（点了两次的量）；随后单独做的精确实验（点前查云 = 5，点后 = 6）证明「一次点击 = 加 1 次」没错位。多出来的那 1 次来源**我没查清**，记账在这里，不假装它不存在。
+
+---
+
+## 十、Day 15 完成标准对照（照实写的）
 
 | 清单要求 | 本项目 | 状态 |
 |---|---|---|
