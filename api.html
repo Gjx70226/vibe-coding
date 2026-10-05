@@ -135,12 +135,15 @@
 
 <!-- 顺序不能反：先网上那个云的小工具，再词库、再咱们自己的取数口子 -->
 <script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"></script>
-<script src="words.js?v=20261005b"></script>
-<script src="api.js?v=20261005b"></script>
+  <script src="words.js?v=20261005b"></script>
+  <!-- Day 19 板块②：数据访问层（查库全收这儿），接口 api.js 只调它们 -->
+  <script src="planDaysRepository.js?v=20261005c"></script>
+  <script src="checkinsRepository.js?v=20261005c"></script>
+  <script src="api.js?v=20261005c"></script>
 <script>
 (function () {
   "use strict";
-  var VER = "2026-10-05b";
+  var VER = "2026-10-05c";
 
   /* 版本号写死在这一页，截图这一行就知道跑的是哪一版 */
   document.getElementById("verFoot").textContent = VER;

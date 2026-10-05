@@ -1,0 +1,20 @@
+== 行为回归 ==
+  PASS  取今日计划 ok
+  PASS    词数按 target_new 数出 3 个  → 3
+  PASS  取学习记录 ok
+  PASS    总数/条数对得上
+  PASS  limit>100 被拒
+  PASS    提示中文
+  PASS  记一笔 新开一行  → insert
+  PASS    正确次数=1
+  PASS  同词已存在→加次数  → update
+  PASS    正确次数=3（原2+1）  → 3
+  PASS  缺 word 被拒
+  PASS    提示中文
+  PASS  手滑连点被挡  → conflict
+
+== 分层到位（接口文件里不许有 SQL，repository 里全有） ==
+  PASS  api.js 里 SQL 关键字命中 0  → 命中 0
+  PASS  repository 里 SQL 关键字全在  → 命中 1
+
+结果：15 过 / 0 失败

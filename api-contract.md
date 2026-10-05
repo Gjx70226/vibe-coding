@@ -5,7 +5,7 @@
 > **Day 15 那天一个接口都没实现，全部只登记占位。**
 > **Day 16：表已真建在云端（`plan_days` / `checkins`），种子数据已灌入（5 天计划 + 6 条记录），下面第二节就是最终版表结构。**
 > **Day 17：第一次真读云端——两个读接口已实现（`getPlanToday` / `getRecords`），第八节写了全盘对照，哪条做了哪条没做都在那张表里。**
-> **Day 18：第一次真写云端——写入接口 `addRecord` 已实现（往 `checkins` 写一行，带校验 / 防重复 / 中文错误），第五节 5 条 + 5-1 节就是最终口径，第九节是全盘对照。**
+> **Day 19：数据访问层拆出来了——查库/写库收进 `planDaysRepository.js` 和 `checkinsRepository.js` 两个新文件，接口层 `api.js` 里搜不到任何查库字眼（0 次），三个接口行为不变（回归 15 项全过）。各天的完成状态见第八～十节。**
 
 ---
 
@@ -327,7 +327,44 @@ Could not find the table 'public.health_probe'
 
 ---
 
-## 十、Day 15 完成标准对照（照实写的）
+## 十、Day 19 完成状态（照实写）
+
+今天没写新功能，做的是**分层重构**：把散在 `api.js` 里的三处查库/写库，搬进两个新文件。清单原话「只许搬家、不许添家具」。
+
+| 搬什么 | 从哪搬走 | 搬到哪 |
+|---|---|---|
+| 查 `plan_days` 今天那行 | `api.js` | `planDaysRepository.js` → `getToday()` |
+| 查 `checkins` 学习记录列表 | `api.js` | `checkinsRepository.js` → `list()` |
+| 查重 / 改次数 / 插新行（记一笔用） | `api.js` | `checkinsRepository.js` → `getByDayWord()` / `bumpCounts()` / `insertRec()` |
+
+- **接口层变薄**：`api.js` 里搜 `from` / `select` / `insert` / `update` 命中 **0 次**（回归脚本自动数的，不是嘴说的）；只剩「接请求 → 调 repository → 返响应」。
+- **行为不变**：三个接口（2 读 1 写）+ 校验 + 防重复，回归 **15 项全过**（`tools/verify_day19_regression.js`）；线上真点「取今日计划」，返回 `ok:true` + 20 个词，跟重构前一个形状。
+- **契约没动**：路径、字段名、响应形状一个字没改。
+
+### 分层示意（余力加练：放进文档的那张图，文字版）
+
+```
+页面（index.html / api.html）
+   │  只管给用户看
+   ▼
+接口层  api.js          ← 接请求 · 调一行 · 返响应（搜不到 from/select/insert/update）
+   │
+   ▼
+数据访问层（Day 19 新拆）
+   ├── planDaysRepository.js    只管 plan_days 的查询
+   └── checkinsRepository.js    只管 checkins 的查询 / 写入
+   │
+   ▼
+云（WorkBuddy Cloud 的两张真表，别人管着）
+```
+
+截图：`day19-review/板块③-文件结构.png`（两个新文件 + 变薄的 api.js）、`板块③-接口正常返回.png`（线上地址栏 + 真云返回 JSON + 页底版本 `2026-10-05c`）。
+
+**今天没做的**：改接口路径 / 字段名（契约不许动）；加新功能（一行没加）；`favorites` 收藏表（还没建，继续顺延）。
+
+---
+
+## 十一、Day 15 完成标准对照（照实写的）
 
 | 清单要求 | 本项目 | 状态 |
 |---|---|---|

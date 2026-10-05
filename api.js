@@ -1,13 +1,11 @@
 /* ============================================================
-   ① 今天解决什么问题：能不能真往云里那张表写一行（Day 18 板块①：第一个写入接口），
-      顺手把「余力加练」做了：每次去问云，自己这儿自动留一行字（Day 18 余力加练）
-   ② 为什么这么选：重复提交用「先看有没有那行 → 有就在原行上把对/错次数 +1，
-      没有才新开一行」，不靠云那条唯一约束硬挡——云那道门槛只管「能不能再插一行」，
-      不管「次数该不该加」，硬挡了当天就没法再练一遍（你拍的 A 方案）。
-      手滑连点另用 3 秒窗口挡（同一个词 + 同一天 + 同一对错，几秒内原样再来＝重复提交）。
-   ③ 今天不做啥：不做云里那张「日志表」（要新开一张表，得你点头才动）；
-      不发版（板块② 才发）；不接主站页面（Day 20 才换真实数据）；
-      不做 PATCH / DELETE / 批量写（第四周）。
+   ① 今天解决什么问题：把「怎么查数据库」从接口文件 api.js 里抽出来，单独放两个
+      数据访问层文件（Day 19 板块②：分层重构）。接口只管接请求、调函数、返响应。
+   ② 为什么这么选：之前三处查库都抄在 api.js 里，加功能得抄一遍、改字段得改 N 处。
+      拆完只改厨房（repository）那一处，服务员（api.js）不用动。
+      行为、响应形状一字不变（契约 api-contract.md 不许动）。
+   ③ 今天不做啥：不改接口路径和字段名（契约不动）；不加任何新功能（只许搬家）；
+      不接主站页面（Day 20）；不做 PATCH / DELETE / 批量写（第四周）。
    ============================================================ */
 
 (function (global) {
@@ -132,16 +130,8 @@
       var c = getClient();
       if (!c) { cb(fail("server", "云的小工具没加载出来")); return; }
 
-      var q = null;
-      try {
-        q = c.database.from("plan_days").select("*").eq("date", todayStr()).maybeSingle();
-      } catch (e0) {
-        cb(fail("server", "问云的话没发出去"));
-        return;
-      }
-      if (!q || typeof q.then !== "function") { cb(fail("server", "云的小工具没接上")); return; }
-
-      q.then(function (out) {
+      /* 查库这件事交给数据访问层（planDaysRepository.js），接口里不再出现 from/select */
+      PlanDaysRepository.getToday(c, todayStr(), function (out) {
         var err = out && out.error;
         if (err) { cb(readCloudErr(err)); return; }
 
@@ -175,8 +165,6 @@
           start_index: row.start_index,
           words: words
         }));
-      })["catch"](function (e) {
-        cb(fail("server", "问云的时候断气了（多半是断网）"));
       });
     },
 
@@ -202,31 +190,8 @@
       var c = getClient();
       if (!c) { cb(fail("server", "云的小工具没加载出来")); return; }
 
-      /* 拼查询：参数全是当值交给云那边，不往里塞拼起来的字（= 清单要的参数化） */
-      function build() {
-        var b = c.database
-          .from("checkins")
-          .select("*", { count: "exact" })
-          .order("created_at", { ascending: false });
-        if (date) {
-          /* 记录表里没有「哪天」这一列，只有答的那一刻的时间，
-             所以按那天 0 点到 23:59 这一段来圈 */
-          b = b.gte("created_at", date + "T00:00:00+08:00")
-               .lte("created_at", date + "T23:59:59+08:00");
-        }
-        return b.range(offset, offset + limit - 1);
-      }
-
-      var q = null;
-      try {
-        q = build();
-      } catch (e0) {
-        cb(fail("server", "问云的话没发出去"));
-        return;
-      }
-      if (!q || typeof q.then !== "function") { cb(fail("server", "云的小工具没接上")); return; }
-
-      q.then(function (out) {
+      /* 查库交给数据访问层（checkinsRepository.js），接口里不再出现 from/select */
+      CheckinsRepository.list(c, { date: date, offset: offset, limit: limit }, function (out) {
         var err = out && out.error;
         if (err) { cb(readCloudErr(err)); return; }
 
@@ -239,8 +204,6 @@
           limit: limit,
           items: rows
         }));
-      })["catch"](function (e) {
-        cb(fail("server", "问云的时候断气了（多半是断网）"));
       });
     },
 
@@ -302,21 +265,11 @@
       lastKey = key;
       lastAt = now;
 
-      /* ---- 第三关：去云里写 ---- */
+      /* ---- 第三关：去云里写（查库全交给 checkinsRepository.js） ---- */
       var c = getClient();
       if (!c) { cb(fail("server", "云的小工具没加载出来")); return; }
 
-      var q = null;
-      try {
-        q = c.database.from("checkins")
-          .select("id,correct_count,wrong_count")
-          .eq("plan_day_id", pid)
-          .eq("word", word)
-          .maybeSingle();
-      } catch (e0) { cb(fail("server", "问云的话没发出去")); return; }
-      if (!q || typeof q.then !== "function") { cb(fail("server", "云的小工具没接上")); return; }
-
-      q.then(function (out) {
+      CheckinsRepository.getByDayWord(c, pid, word, function (out) {
         var err = out && out.error;
         if (err) { cb(readCloudErr(err)); return; }
 
@@ -326,13 +279,7 @@
           /* 今天这行已经记过了 —— 加次数，不新开一行（A 方案：答对就加对 1 次） */
           var nc = (Number(row.correct_count) || 0) + addCorrect;
           var nw = (Number(row.wrong_count) || 0) + addWrong;
-          var q2 = null;
-          try {
-            q2 = c.database.from("checkins").update({ correct_count: nc, wrong_count: nw })
-              .eq("id", row.id).select("id,correct_count,wrong_count").maybeSingle();
-          } catch (e1) { cb(fail("server", "改次数的话没发出去")); return; }
-          if (!q2 || typeof q2.then !== "function") { cb(fail("server", "云的小工具没接上")); return; }
-          q2.then(function (o2) {
+          CheckinsRepository.bumpCounts(c, row.id, nc, nw, function (o2) {
             var e2 = o2 && o2.error;
             if (e2) { cb(readCloudErr(e2)); return; }
             var r2 = (o2 && o2.data) || {};
@@ -343,25 +290,20 @@
               wrong: Number(r2.wrong_count || nw),
               action: "update"
             }));
-          })["catch"](function () { cb(fail("server", "改次数的时候断气了（多半是断网）")); });
+          });
           return;
         }
 
         /* 今天还没记过这行 —— 新开一行 */
-        var q3 = null;
-        try {
-          q3 = c.database.from("checkins").insert({
-            plan_day_id: pid,
-            word: word,
-            pos: pos,
-            correct_count: addCorrect,
-            wrong_count: addWrong,
-            status: "pending",
-            mode: mode
-          }).select("id,correct_count,wrong_count").single();
-        } catch (e3) { cb(fail("server", "写的话没发出去")); return; }
-        if (!q3 || typeof q3.then !== "function") { cb(fail("server", "云的小工具没接上")); return; }
-        q3.then(function (o3) {
+        CheckinsRepository.insertRec(c, {
+          plan_day_id: pid,
+          word: word,
+          pos: pos,
+          correct_count: addCorrect,
+          wrong_count: addWrong,
+          status: "pending",
+          mode: mode
+        }, function (o3) {
           var e3 = o3 && o3.error;
           if (e3) { cb(readCloudErr(e3)); return; }
           var r3 = (o3 && o3.data) || {};
@@ -372,8 +314,8 @@
             wrong: Number(r3.wrong_count || addWrong),
             action: "insert"
           }));
-        })["catch"](function () { cb(fail("server", "写的时候断气了（多半是断网）")); });
-      })["catch"](function () { cb(fail("server", "问云的时候断气了（多半是断网）")); });
+        });
+      });
     }
   };
 
