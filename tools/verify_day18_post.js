@@ -122,7 +122,7 @@ say("");
 say("【api.html 这一页：按钮和输入框都在不在（本地文件，没连云）】");
 JSDOM.fromFile(path.join(ROOT, "api.html"), { runScripts: "dangerously" }).then(function (dom) {
   const doc = dom.window.document;
-  ["btnPlan", "btnRec", "btnAgain", "btnErr", "btnPost", "btnDup", "btnMiss",
+  ["btnPlan", "btnRec", "btnAgain", "btnErr", "btnPost", "btnDup", "btnMiss", "btnLog", "logBox",
    "inPid", "inWord", "inPos", "selRight", "selMode"].forEach(function (id) {
     say("  " + id + "：" + (doc.getElementById(id) ? "在" : "【没了，坏了】"));
   });

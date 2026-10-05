@@ -1,10 +1,12 @@
 /* ============================================================
-   ① 今天解决什么问题：能不能真往云里那张表写一行（Day 18 板块①：第一个写入接口）
+   ① 今天解决什么问题：能不能真往云里那张表写一行（Day 18 板块①：第一个写入接口），
+      顺手把「余力加练」做了：每次去问云，自己这儿自动留一行字（Day 18 余力加练）
    ② 为什么这么选：重复提交用「先看有没有那行 → 有就在原行上把对/错次数 +1，
       没有才新开一行」，不靠云那条唯一约束硬挡——云那道门槛只管「能不能再插一行」，
       不管「次数该不该加」，硬挡了当天就没法再练一遍（你拍的 A 方案）。
       手滑连点另用 3 秒窗口挡（同一个词 + 同一天 + 同一对错，几秒内原样再来＝重复提交）。
-   ③ 今天不做啥：不发版（板块② 才发）；不接主站页面（Day 20 才换真实数据）；
+   ③ 今天不做啥：不做云里那张「日志表」（要新开一张表，得你点头才动）；
+      不发版（板块② 才发）；不接主站页面（Day 20 才换真实数据）；
       不做 PATCH / DELETE / 批量写（第四周）。
    ============================================================ */
 
@@ -73,15 +75,60 @@
     return fail("server", raw);
   }
 
+  /* ---- 余力加练（A 方案）：留痕 ----------------------------------------
+     每次去问云，自己这儿自动留一行：几点、干的啥、成没成、云回了啥。
+     留两处：① 浏览器控制台（电脑 F12 能看，黄字＝砸了）
+            ② 一个最多留 50 条的小本子，挂在页面上（控制台输 __apiLog 也看得见，
+               查看页 api.html 上有「看留痕」按钮直接打出来）
+     只留自己这儿，不往云里写 —— 这网站没有自己开的服务器，写不进去。
+     想换留多少条：改下面 LOG_MAX 一个数。 */
+  var LOG_MAX = 50;
+
+  function clip(s, n) {
+    s = String(s).replace(/\s+/g, " ");
+    return s.length > n ? s.slice(0, n) + " …" : s;
+  }
+
+  function trace(action, r) {
+    if (!global.__apiLog) global.__apiLog = [];
+    var d = new Date();
+    var hh = d.getHours(), mm = d.getMinutes(), ss = d.getSeconds();
+    var hms = (hh < 10 ? "0" + hh : hh) + ":" + (mm < 10 ? "0" + mm : mm) + ":" + (ss < 10 ? "0" + ss : ss);
+    var good = !!(r && r.ok);
+    var line;
+    if (good) {
+      var d3 = (r && r.data) || {};
+      line = "成 " + hms + "  " + action +
+        (d3.action ? "（新开一行）" : d3.total !== undefined ? "（一共 " + d3.total + " 条）" :
+         (d3.words ? "（" + d3.words.length + " 个词）" : "")) +
+        (d3.id ? "  行的号 " + d3.id : "") +
+        (d3.word ? "  词 " + d3.word : "");
+    } else {
+      line = "砸 " + hms + "  " + action +
+        "  [" + ((r && r.error) || "?") + "] " + clip((r && r.msg) || "没说出为啥", 80);
+    }
+    global.__apiLog.push(line);
+    if (global.__apiLog.length > LOG_MAX) global.__apiLog.shift();
+    if (global.console && global.console[good ? "log" : "warn"]) {
+      global.console[good ? "log" : "warn"]("[云] " + line);
+    }
+  }
+
   var Api = {
 
     /* 给验证脚本用的小后门：把云端回的英文原话翻成人话。页面自己不调它 */
     _readCloudErr: readCloudErr,
 
+    /* 给留痕用的：看自己留了哪几行（页面「看留痕」按钮调它，验证脚本也能调） */
+    log: function () { return (global.__apiLog || []).slice(); },
+
     /* 接口一：取「今天的计划」—— 读 plan_days 那张表
        回的是 {ok:true, data:{date, target_new, start_index, words:[...]}}
        今天还没建计划时，回 {ok:true, data:{empty:true, msg:"今天还没开始…"}}（不是报错） */
     getPlanToday: function (cb) {
+      var _cb = cb;   /* 余力加练：管它是从哪条道出去的，出门前先留一行 */
+      cb = function (r) { trace("取今天的计划", r); _cb(r); };
+
       var c = getClient();
       if (!c) { cb(fail("server", "云的小工具没加载出来")); return; }
 
@@ -144,6 +191,12 @@
       if (isNaN(offset) || offset < 0) offset = 0;
       var limit = parseInt(opt.limit, 10);
       if (isNaN(limit) || limit <= 0) limit = DEFAULT_LIMIT;
+
+      /* 余力加练：留痕的口子得开在**所有校验之前**，
+         要不然「limit 超上限」这种当场挡回的错误就留不下痕了（第一天写漏了，改在这里） */
+      var _cb = cb;
+      cb = function (r) { trace("取学习记录" + (date ? "（" + date + "）" : ""), r); _cb(r); };
+
       if (limit > MAX_LIMIT) { cb(fail("bad_request", "limit 不能大于 " + MAX_LIMIT)); return; }
 
       var c = getClient();
@@ -202,6 +255,9 @@
     addRecord: function (opt, cb) {
       opt = opt || {};
       cb = cb || function () {};
+
+      var _cb = cb;   /* 余力加练：出门前先留一行（含手滑连点被当场挡回的那次） */
+      cb = function (r) { trace("记一笔", r); _cb(r); };
 
       /* ---- 第一关：看输入对不对，错了回人话（不联网，先挡住） ---- */
       var rawDay = (opt.plan_day_id === undefined || opt.plan_day_id === null) ? "" : String(opt.plan_day_id).trim();

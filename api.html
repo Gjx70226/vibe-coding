@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>接口查看页 · 四级备考助手</title>
-<link rel="stylesheet" href="style.css?v=20261005a">
+<link rel="stylesheet" href="style.css?v=20261005b">
 <style>
   /* 这一页只管自己这一块，颜色圆角跟别处一样走上面的变量，改 :root 就跟着变 */
   .api-wrap { padding-top: 18px; }
@@ -106,6 +106,21 @@
       </div>
     </div>
 
+    <div class="api-write">
+      <div class="api-write-tag">留痕（Day 18 余力加练：每次去问云，自己这儿自动留一行）</div>
+      <div class="api-btns">
+        <button class="api-btn ghost" id="btnLog" type="button">看刚才留的那几行</button>
+      </div>
+      <div class="api-out">
+        <div class="api-out-title" id="logTitle">还没留——上面随便点一个按钮就有了</div>
+        <pre class="api-json" id="logBox">（空）</pre>
+      </div>
+      <div class="api-hint">
+        这些行只留你这台设备自己这儿（最多 50 条），换手机、清缓存就跟着没了——
+        这网站没有自己开的服务器，留不到云里去。出问题时扫一眼，就知道是哪一次、哪个词、云回了啥。
+      </div>
+    </div>
+
     <div class="api-out">
       <div class="api-out-title" id="outTitle">还没取——点上面第一个按钮</div>
       <pre class="api-json" id="outJson">（空）</pre>
@@ -120,12 +135,12 @@
 
 <!-- 顺序不能反：先网上那个云的小工具，再词库、再咱们自己的取数口子 -->
 <script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"></script>
-<script src="words.js?v=20261005a"></script>
-<script src="api.js?v=20261005a"></script>
+<script src="words.js?v=20261005b"></script>
+<script src="api.js?v=20261005b"></script>
 <script>
 (function () {
   "use strict";
-  var VER = "2026-10-05a";
+  var VER = "2026-10-05b";
 
   /* 版本号写死在这一页，截图这一行就知道跑的是哪一版 */
   document.getElementById("verFoot").textContent = VER;
@@ -168,7 +183,24 @@
     } else {
       outHint.textContent = "上面是云真回的话，一个字没改。改一条库里的数据再点一次「再取一次」，这两段就会不一样。";
     }
+    showLog();   /* 每次问完云，顺手把留痕那块也刷一下 */
   }
+
+  var logTitle = document.getElementById("logTitle");
+  var logBox = document.getElementById("logBox");
+
+  /* 把留的那几行打出来 —— 不用开控制台，手机上点一下就能看（Day 18 余力加练） */
+  function showLog() {
+    var arr = (typeof Api.log === "function") ? Api.log() : [];
+    if (!arr.length) {
+      logTitle.textContent = "还没留——上面随便点一个按钮就有了";
+      logBox.textContent = "（空）";
+      return;
+    }
+    logTitle.textContent = "留痕：一共 " + arr.length + " 行（最下面那行是最近一次）";
+    logBox.textContent = arr.slice(-20).join("\n");
+  }
+  document.getElementById("btnLog").onclick = showLog;
 
   function load(kind) {
     outTitle.textContent = "正在去云里取…";
