@@ -49,6 +49,13 @@
   .api-write { margin-top: 20px; padding-top: 16px; border-top: 1px dashed #d8d2c9; }
   .api-write-tag { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
   .api-foot { margin-top: 18px; padding: 14px 0 40px; font-size: 13px; color: var(--text-soft); text-align: center; }
+  /* Day 20：顶部状态条（健康 + 最后更新时间），颜色走上面的变量 */
+  .api-status { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+  .api-health { font-size: 14px; font-weight: 700; padding: 6px 12px; border-radius: 999px; }
+  .api-health.ok { background: #e6f7ec; color: #1a7f43; }
+  .api-health.bad { background: #fdecea; color: #c0392b; }
+  .api-health.wait { background: #fff7e6; color: #b8860b; }
+  .api-upd { font-size: 13px; color: var(--text-soft); }
 </style>
 </head>
 <body>
@@ -62,6 +69,11 @@
     这一页不干别的，只干一件事：真的去云那头的两张表里把数据取出来，原样打在下面。<br>
     图上这一屏就是证据——下面那段字是云回的，不是我提前写在页面里的。
   </p>
+
+  <div class="api-status">
+    <span class="api-health wait" id="healthTxt">云状态：检测中…</span>
+    <span class="api-upd" id="lastUpd">最后更新：—</span>
+  </div>
 
   <div class="api-card">
     <div class="api-btns">
@@ -143,7 +155,7 @@
 <script>
 (function () {
   "use strict";
-  var VER = "2026-10-05c";
+  var VER = "2026-10-05d";
 
   /* 版本号写死在这一页，截图这一行就知道跑的是哪一版 */
   document.getElementById("verFoot").textContent = VER;
@@ -186,6 +198,29 @@
     } else {
       outHint.textContent = "上面是云真回的话，一个字没改。改一条库里的数据再点一次「再取一次」，这两段就会不一样。";
     }
+
+    /* Day 20：健康状态 + 最后更新时间（余力加练）。
+       只要云「回了话」（成了或报错了都算链路通），就亮绿；只有云小工具根本没加载出来才算连不上。 */
+    var h = document.getElementById("healthTxt");
+    if (h) {
+      var msg = (obj && obj.msg) || "";
+      var reached = (obj && (obj.ok || obj.error)) && !/没加载出来/.test(msg);
+      if (reached) {
+        h.className = "api-health ok";
+        h.textContent = "云已连通 ✅";
+      } else if (/没加载出来/.test(msg)) {
+        h.className = "api-health bad";
+        h.textContent = "云连不上 ❌";
+      }
+    }
+    if (obj && obj.ok) {
+      var u = document.getElementById("lastUpd");
+      if (u) {
+        var d = new Date(), p = function (n) { return n < 10 ? "0" + n : n; };
+        u.textContent = "最后更新：" + p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds());
+      }
+    }
+
     showLog();   /* 每次问完云，顺手把留痕那块也刷一下 */
   }
 
@@ -246,7 +281,17 @@
   /* 打开这一页就自己先去云里取一次（先取「今日计划」），省得还要先找按钮。
      想直接看别的：地址末尾加 #rec = 学习记录，#err = 故意看错误 */
   var hash = (location.hash || "").replace("#", "");
-  setTimeout(function () { load(hash === "rec" || hash === "err" ? hash : "plan"); }, 800);
+  setTimeout(function () {
+    load(hash === "rec" || hash === "err" ? hash : "plan");
+    /* Day 20 看门狗：8 秒后还没取到（标题还停在「正在去云里取」），说明云没连上 */
+    setTimeout(function () {
+      var hh = document.getElementById("healthTxt");
+      if (hh && /检测中/.test(hh.textContent)) {
+        hh.className = "api-health bad";
+        hh.textContent = "云连不上 ❌";
+      }
+    }, 8000);
+  }, 800);
 })();
 </script>
 </body>

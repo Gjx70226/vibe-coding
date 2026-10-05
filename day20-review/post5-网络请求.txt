@@ -1,0 +1,13 @@
+全部云相关请求地址：
+https://cet4-word-helper.app.workbuddy.host/api.html
+https://cet4-word-helper.app.workbuddy.host/style.css?v=20261005b
+https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js
+https://cet4-word-helper.app.workbuddy.host/words.js?v=20261005b
+https://cet4-word-helper.app.workbuddy.host/planDaysRepository.js?v=20261005c
+https://cet4-word-helper.app.workbuddy.host/checkinsRepository.js?v=20261005c
+https://cet4-word-helper.app.workbuddy.host/api.js?v=20261005c
+https://cet4-word-helper.app.workbuddy.host/favicon.ico
+https://cet4-word-helper.app.workbuddy.host/.cloud/database/rest/plan_days?select=*&date=eq.2026-10-05
+
+其中 localhost/127.0.0.1 的：
+（无）
