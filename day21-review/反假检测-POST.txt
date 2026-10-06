@@ -1,0 +1,12 @@
+Api 加载好（探 1 次）
+===== 先清理任何 day21probe 残留 =====
+   残留查询：{"success":true,"error":null,"data":[{"id":15,"word":"day21probe","plan_day_id":6,"correct_count":1,"wrong_count":0}],"count":null,"status":200,"statusText":""}
+   删 id=15：{"success":true,"error":null,"data":null,"count":null,"status":204,"statusText":""}
+① 写入前今日行数 = 0
+② 正常写入（词=day21probe）：{"ok":true,"data":{"id":16,"word":"day21probe","correct":1,"wrong":0,"action":"insert"}}
+③ 写入后行数 = 1  ← +1 行 ✔
+④ 云实例查「day21probe」：{"success":true,"error":null,"data":[{"id":16,"word":"day21probe","plan_day_id":6,"correct_count":1,"wrong_count":0}],"count":null,"status":200,"statusText":""}
+⑤ 删除 id=16：{"success":true,"error":null,"data":null,"count":null,"status":204,"statusText":""}
+⑥ 清理后行数 = 0  ← 回到写入前 ✔（没污染）
+
+【判定】写入+1：对得上 ✔ ／ 读回闭环：对得上 ✔ ／ 清理：干净 ✔

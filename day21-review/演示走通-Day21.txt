@@ -1,0 +1,25 @@
+===== 步骤1：打开公网链接 =====
+   页面+Api 加载好（探 1 次）
+===== 步骤2：取今日计划（看是不是真库） =====
+   outJson 前 160 字：{
+  "ok": true,
+  "data": {
+    "date": "2026-10-07",
+    "target_new": 15,
+    "start_index": 60,
+    "words": [
+      {
+        "word": "major",
+        "pos"
+   判定：真数据ok:true
+===== 步骤3：记一笔（真实写入 day21demo） =====
+   写入返回：{"ok":true,"data":{"id":17,"word":"day21demo","correct":1,"wrong":0,"action":"insert"}}
+===== 步骤4：刷新页面（模拟用户关掉重开） =====
+   刷新后重载好（探 1 次）
+===== 步骤5：刷新后取记录，看那笔还在（持久化） =====
+   云实例查 day21demo：{"success":true,"error":null,"data":[{"id":17,"word":"day21demo","plan_day_id":6}],"count":null,"status":200,"statusText":""}
+===== 步骤6：清理测试笔（不污染云） =====
+   删除 day21demo：{"success":true,"error":null,"data":null,"count":null,"status":204,"statusText":""}
+
+【计时】核心流程耗时 = 12.0 秒  （≤300 秒=合格：合格 ✔）
+【判定】取真数据：✔ ／ 真实写入：✔ ／ 刷新后持久化：✔
