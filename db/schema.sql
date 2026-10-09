@@ -46,6 +46,8 @@ CREATE TABLE IF NOT EXISTS checkins (
   -- 用 TEXT + CHECK 而不是存 0/1：状态要能一眼读成中文那样_pending / mastered
   status      TEXT            NOT NULL DEFAULT 'pending'  CHECK (status IN ('pending', 'mastered')),
   mode        TEXT            NOT NULL DEFAULT 'new'      CHECK (mode IN ('new', 'wrong', 'daily')),
+  -- 软删除标记（Day 22 余力加练）：0 = 正常，1 = 已进回收站。不真删，删错了能找回
+  is_deleted  INTEGER         NOT NULL DEFAULT 0,
   created_at  TIMESTAMPTZ     NOT NULL DEFAULT now()
 );
 
@@ -60,3 +62,4 @@ COMMENT ON COLUMN checkins.correct_count    IS '这个词累计答对几次';
 COMMENT ON COLUMN checkins.wrong_count      IS '这个词累计答错几次';
 COMMENT ON COLUMN checkins.status           IS 'pending 待复习 / mastered 已掌握';
 COMMENT ON COLUMN checkins.mode             IS '这个记录从哪来：new 新词 / wrong 错题 / daily 每日';
+COMMENT ON COLUMN checkins.is_deleted       IS '软删除标记：0 正常 / 1 已进回收站（不真删，删错了能找回）';

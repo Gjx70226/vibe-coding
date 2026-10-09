@@ -1,0 +1,28 @@
+Api 加载好（探 1 次）
+===== 先清理任何 day22demo 残留 =====
+   残留查询：{"success":true,"error":null,"data":[],"count":null,"status":200,"statusText":""}
+===== ① 插入测试行（词=day22demo，pid=6） =====
+   插入返回：{"success":true,"error":null,"data":{"id":18,"status":"pending","is_deleted":0},"count":null,"status":201,"statusText":""}
+   测试行 id = 18
+② PATCH 前：status=pending，is_deleted=0
+===== ③ PATCH 改状态（页面按钮真实路径） =====
+   PATCH 后：status=mastered，is_deleted=0
+   对比：pending → mastered  ✔ 改生效
+   📸 截图存：PATCH-改后页面.png
+===== ④ 软删（页面删除按钮真实路径） =====
+   软删后全量查：is_deleted=1（=1 表示已进回收站）
+   列表可见查（is_deleted=0 过滤）：{"success":true,"error":null,"data":[],"count":null,"status":200,"statusText":""}  ← 空数组=列表已跳过这条 ✔
+   📸 截图存：DELETE-软删后页面.png
+===== ⑤ 找回（页面找回按钮真实路径） =====
+   找回后全量查：is_deleted=0（=0 表示已恢复）
+   列表可见查（is_deleted=0 过滤）：{"success":true,"error":null,"data":[{"id":18}],"count":null,"status":200,"statusText":""}  ← 有 id=18 表示又出现了 ✔
+===== ⑥ 防呆：操作不存在的 id=99999 =====
+   改 id=99999 返回：{"ok":false,"error":"not_found","msg":"找不到编号为 99999 的这条记录（可能已经被删了，或编号填错了）"}
+   删 id=99999 返回：{"ok":false,"error":"not_found","msg":"找不到编号为 99999 的这条记录（可能已经被删了，或编号填错了）"}
+   防呆判定：两处都报 not_found，不报成功、不崩 ✔
+   📸 截图存：防呆-不存在编号.png
+===== ⑦ 清理测试行 id=18 =====
+   硬删：{"success":true,"error":null,"data":null,"count":null,"status":204,"statusText":""}
+   清理后残留查询：{"success":true,"error":null,"data":[],"count":null,"status":200,"statusText":""}  ← 干净 ✔
+
+【判定】PATCH 改生效：✔ ／ 软删进回收站（is_deleted=1 且列表跳过）：✔ ／ 找回恢复（is_deleted=0 且列表再现）：✔ ／ 防呆 not_found：✔ ／ 清理干净：✔

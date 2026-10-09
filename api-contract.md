@@ -213,13 +213,29 @@ Could not find the table 'public.health_probe'
 | 成功回啥 | `{"ok":true,"items":[{"word":"visible","status":"pending","wrong":1}]}` |
 | 规矩（Day 14 定） | 复习答对**也留在本子里**，只改状态，**不清空**；`wrong` 字段记错过几次 |
 
-### 10）`PATCH /api/wrong/:id` —— 改某个错题的状态
+### 10）`PATCH /api/wrong/:id` —— 改某个错题的状态（**Day 22 已实现，换做法**）
 
 | 项 | 内容 |
 |---|---|
 | 请求参数（body） | `{"status":"mastered"}` |
 | 成功回啥 | `{"ok":true,"id":42,"status":"mastered"}` |
 | 错误回啥 | `{"ok":false,"error":"not_found","msg":"这条不在错题本"}`，HTTP 404 |
+
+### 10-1）`DELETE /api/wrong/:id` —— 软删（Day 22 换做法，余力加练）
+
+| 项 | 内容 |
+|---|---|
+| 请求参数 | 路径 id |
+| 成功回啥 | `{"ok":true,"id":42}`（**不真删**：把 `is_deleted` 标成 1，列表查询自动跳过它） |
+| 错误回啥 | id 不存在 → `{"ok":false,"error":"not_found","msg":"找不到编号为 X 的这条记录"}`，HTTP 404 |
+
+### 10-2）`POST /api/wrong/:id/restore` —— 找回（Day 22 余力加练）
+
+| 项 | 内容 |
+|---|---|
+| 请求参数 | 路径 id |
+| 成功回啥 | `{"ok":true,"id":42}`（把 `is_deleted` 改回 0，这条又出现在列表里） |
+| 错误回啥 | id 不存在 → 同上 `not_found`，HTTP 404 |
 
 ### 11）收藏三连（第 19 天）
 
@@ -398,3 +414,25 @@ Could not find the table 'public.health_probe'
 - ❌ 后端代码 —— 今天不碰。
 - ❌ 从零重新部署 —— 沿用 Day 15 的静态托管，覆盖式发版。
 - ⚠️ **同伴用自己手机打开确认** —— 这步要你自己发链接给同伴做，我没法替你（验证脚本已证实公网链路通）。
+
+---
+
+## 十三、Day 22 完成状态（照实写）
+
+今天补上「改 / 删」两类接口，并把删除做成**软删除（回收站）**——这是余力加练，小甘明确要练的。
+
+| 清单要求 | 本项目实做 | 状态 |
+|---|---|---|
+| PATCH 修改一条数据生效 | `Api.updateRecord({id, status})` → 底层 `updateById` 只动 `status` 一列（白名单锁死其它字段）；先 `getById` 确认存在，不存在→`not_found` | ✅ 公网真演练：pending → mastered 生效 |
+| DELETE 删除后 GET 不再返回 | **换成软删除**：`deleteById` 把 `is_deleted` 标 1，不真删；`list` 查询加了 `.eq("is_deleted", 0)` 自动跳过 | ✅ 公网真演练：is_deleted=1 且「is_deleted=0 过滤」返回空，列表确跳过 |
+| 操作不存在的 id 返回明确错误 | `updateRecord` / `deleteRecord` 都先 `getById`，不存在 → `{"ok":false,"error":"not_found","msg":"找不到编号为 X 的这条记录"}`，不崩不报成功 | ✅ 公网真演练：id=99999 两处都 `not_found` |
+| 删除二次确认（前端） | 点删按钮先 `window.confirm("…放进回收站吗？还能找回")` | ✅ 在 `api.html` 的 `btnDelete` |
+| 余力加练：软删除 + 找回 | 给 `checkins` 加列 `is_deleted`（云表已 ALTER 加上）；新增 `restoreById` / `Api.restoreRecord`「找回」按钮 | ✅ 公网真演练：is_deleted 0↔1 往返、列表跟着显隐 |
+| 同步 api-contract.md | 第十节 PATCH 标「已实现」，新增 10-1 软删 / 10-2 找回 | ✅ 本节 + 第 10 节 |
+| 四类操作闭环（增删改查） | POST（Day 18）+ GET（Day 17）+ PATCH/DELETE/restore（Day 22） | ✅ |
+
+**怎么验证的（不拿旧截图当证据）**：`tools/verify_day22.js` 真开公网 `api.html`，用测试行 `day22demo`（id=18）走完整四步——改状态生效、软删进回收站、找回恢复、删不存在 id 报 `not_found`——全程用云实例精确 `select` 做硬证据，跑完硬删测试行不留脏数据。原话存 `day22-review/演练-Day22.txt`，截图 `day22-review/PATCH-改后页面.png` / `DELETE-软删后页面.png` / `防呆-不存在编号.png`。
+
+**今日新加的软删除列（云端已生效）**：`checkins.is_deleted INTEGER NOT NULL DEFAULT 0`，`db/schema.sql` 与 `db/seed.sql` 的建表语句已同步加上。
+
+**每日一问（删除为什么比新增更容易出事？你在哪加了确认？）**：删了就真没了（或至少从视线消失）且容易填错编号——错删一个不存在的 id 若还报「成功」就是骗你。所以两道保险：①前端点删先弹 `confirm` 确认（在 `api.html` 的 `btnDelete`）；②后端先查存在，不存在明说 `not_found` 绝不报成功。软删除再多加一道：不真删、能找回。

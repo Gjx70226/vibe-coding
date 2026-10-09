@@ -320,4 +320,131 @@
   };
 
   global.Api = Api;
+
+  /* 接口四：改一条 —— 按编号把某条学习记录的状态从「没背熟」改成「背熟了」（PATCH，Day 22 板块①）
+     只许改 status（pending / mastered），别的字段锁死不让动；
+     编号不存在就回中文 not_found，绝不报成功，这是防呆核心；
+     成了回 ok 带上这行的编号和新状态 */
+  Api.updateRecord = function (opt, cb) {
+    opt = opt || {};
+    cb = cb || function () {};
+
+    var _cb = cb;
+    cb = function (r) { trace("改一条", r); _cb(r); };
+
+    var rawId = (opt.id === undefined || opt.id === null) ? "" : String(opt.id).trim();
+    if (!rawId) { cb(fail("bad_request", "少了 id（得写清要改的是第几行）")); return; }
+    var id = parseInt(rawId, 10);
+    if (isNaN(id) || id <= 0) {
+      cb(fail("bad_request", "id 得是个数字（要改那行的行号），你填的是「" + rawId + "」"));
+      return;
+    }
+
+    var status = (opt.status === undefined || opt.status === null) ? "" : String(opt.status).trim();
+    if (status !== "pending" && status !== "mastered") {
+      cb(fail("bad_request", "status 只能是 pending（没背熟）或 mastered（背熟了）这两个之一，你填的是「" + status + "」"));
+      return;
+    }
+
+    var c = getClient();
+    if (!c) { cb(fail("server", "云的小工具没加载出来")); return; }
+
+    CheckinsRepository.getById(c, id, function (out) {
+      var err = out && out.error;
+      if (err) { cb(readCloudErr(err)); return; }
+
+      var row = out && out.data;
+      if (!row || !row.id) {
+        cb(fail("not_found", "找不到编号为 " + id + " 的这条记录（可能已经被删了，或编号填错了）"));
+        return;
+      }
+
+      CheckinsRepository.updateById(c, id, status, function (o2) {
+        var e2 = o2 && o2.error;
+        if (e2) { cb(readCloudErr(e2)); return; }
+        var r2 = (o2 && o2.data) || {};
+        cb(ok({
+          id: r2.id || id,
+          status: r2.status || status
+        }));
+      });
+    });
+  };
+
+  /* 接口五：删一条 —— 按编号把某条学习记录整行删掉（DELETE，Day 22 板块②）
+     编号不存在就回中文 not_found，绝不报删除成功，这是防呆核心（删了找不回，编号错必须拦住）；
+     成了回 ok 带上删掉的编号 */
+  Api.deleteRecord = function (opt, cb) {
+    opt = opt || {};
+    cb = cb || function () {};
+
+    var _cb = cb;
+    cb = function (r) { trace("删一条", r); _cb(r); };
+
+    var rawId = (opt.id === undefined || opt.id === null) ? "" : String(opt.id).trim();
+    if (!rawId) { cb(fail("bad_request", "少了 id（得写清要删的是第几行）")); return; }
+    var id = parseInt(rawId, 10);
+    if (isNaN(id) || id <= 0) {
+      cb(fail("bad_request", "id 得是个数字（要删那行的行号），你填的是「" + rawId + "」"));
+      return;
+    }
+
+    var c = getClient();
+    if (!c) { cb(fail("server", "云的小工具没加载出来")); return; }
+
+    CheckinsRepository.getById(c, id, function (out) {
+      var err = out && out.error;
+      if (err) { cb(readCloudErr(err)); return; }
+
+      var row = out && out.data;
+      if (!row || !row.id) {
+        cb(fail("not_found", "找不到编号为 " + id + " 的这条记录（可能已经被删了，或编号填错了）"));
+        return;
+      }
+
+      CheckinsRepository.deleteById(c, id, function (o2) {
+        var e2 = o2 && o2.error;
+        if (e2) { cb(readCloudErr(e2)); return; }
+        cb(ok({ id: id }));
+      });
+    });
+  };
+
+  /* 找回（恢复）一条被软删的记录：确认这行在不在 → 把 is_deleted 标回 0 → 它就又出现在列表里。
+     这是软删除的「后悔药」：删错了不用慌，找回就行 */
+  Api.restoreRecord = function (opt, cb) {
+    opt = opt || {};
+    cb = cb || function () {};
+
+    var _cb = cb;
+    cb = function (r) { trace("找回一条", r); _cb(r); };
+
+    var rawId = (opt.id === undefined || opt.id === null) ? "" : String(opt.id).trim();
+    if (!rawId) { cb(fail("bad_request", "少了 id（得写清要找回的是第几行）")); return; }
+    var id = parseInt(rawId, 10);
+    if (isNaN(id) || id <= 0) {
+      cb(fail("bad_request", "id 得是个数字（要找回那行的行号），你填的是「" + rawId + "」"));
+      return;
+    }
+
+    var c = getClient();
+    if (!c) { cb(fail("server", "云的小工具没加载出来")); return; }
+
+    CheckinsRepository.getById(c, id, function (out) {
+      var err = out && out.error;
+      if (err) { cb(readCloudErr(err)); return; }
+
+      var row = out && out.data;
+      if (!row || !row.id) {
+        cb(fail("not_found", "找不到编号为 " + id + " 的这条记录（编号填错了，或它压根没存在过）"));
+        return;
+      }
+
+      CheckinsRepository.restoreById(c, id, function (o2) {
+        var e2 = o2 && o2.error;
+        if (e2) { cb(readCloudErr(e2)); return; }
+        cb(ok({ id: id }));
+      });
+    });
+  };
 })(window);

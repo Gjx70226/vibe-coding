@@ -119,6 +119,24 @@
     </div>
 
     <div class="api-write">
+      <div class="api-write-tag">改 / 删 / 找回（Day 22：改状态 · 软删进回收站 · 删错了能找回）</div>
+      <div class="api-form">
+        <label for="inEditId">要改/删的编号</label>
+        <input type="text" id="inEditId" placeholder="行号" size="5">
+        <label for="selStatus">改成啥状态（仅「改」用）</label>
+        <select id="selStatus">
+          <option value="pending">pending 没背熟</option>
+          <option value="mastered">mastered 背熟了</option>
+        </select>
+      </div>
+      <div class="api-btns">
+        <button class="api-btn ghost" id="btnPatch" type="button">改这一条的状态</button>
+        <button class="api-btn warn" id="btnDelete" type="button">删这一条（进回收站）</button>
+        <button class="api-btn ghost" id="btnRestore" type="button">找回这一条</button>
+      </div>
+    </div>
+
+    <div class="api-write">
       <div class="api-write-tag">留痕（Day 18 余力加练：每次去问云，自己这儿自动留一行）</div>
       <div class="api-btns">
         <button class="api-btn ghost" id="btnLog" type="button">看刚才留的那几行</button>
@@ -150,12 +168,12 @@
   <script src="words.js?v=20261005b"></script>
   <!-- Day 19 板块②：数据访问层（查库全收这儿），接口 api.js 只调它们 -->
   <script src="planDaysRepository.js?v=20261005c"></script>
-  <script src="checkinsRepository.js?v=20261005c"></script>
-  <script src="api.js?v=20261005c"></script>
+  <script src="checkinsRepository.js?v=20261009a"></script>
+  <script src="api.js?v=20261009a"></script>
 <script>
 (function () {
   "use strict";
-  var VER = "2026-10-05d";
+  var VER = "2026-10-09a";
 
   /* 版本号写死在这一页，截图这一行就知道跑的是哪一版 */
   document.getElementById("verFoot").textContent = VER;
@@ -171,6 +189,8 @@
   var inPos = document.getElementById("inPos");
   var selRight = document.getElementById("selRight");
   var selMode = document.getElementById("selMode");
+  var inEditId = document.getElementById("inEditId");
+  var selStatus = document.getElementById("selStatus");
 
   /* 把上面那排框里的东西凑成一个「要往云里记啥」的单子。
      missWord=true 就是故意把「哪个词」那格留空，用来看校验挡不挡 */
@@ -277,6 +297,28 @@
      就差这一下是第二次——第二次该被那道防重复的手挡住 */
   document.getElementById("btnDup").onclick = function () { load("post"); };
   document.getElementById("btnMiss").onclick = function () { load("postmiss"); };
+  document.getElementById("btnPatch").onclick = function () {
+    var id = inEditId.value.trim();
+    if (!id) { paint("【改一条】没填编号", { ok: false, error: "bad_request", msg: "得先填要改的是第几行" }, true); return; }
+    Api.updateRecord({ id: id, status: selStatus.value }, function (r) {
+      paint("【改一条】" + (r && r.ok ? "改好了（编号 " + (r.data && r.data.id) + " → " + (r.data && r.data.status) + "）" : "没改成"), r, !(r && r.ok));
+    });
+  };
+  document.getElementById("btnDelete").onclick = function () {
+    var id = inEditId.value.trim();
+    if (!id) { paint("【删一条】没填编号", { ok: false, error: "bad_request", msg: "得先填要删的是第几行" }, true); return; }
+    if (!window.confirm("确定把编号为 " + id + " 的这条记录放进回收站吗？还能在「找回这一条」里拿回来。")) return;
+    Api.deleteRecord({ id: id }, function (r) {
+      paint("【删一条】" + (r && r.ok ? "放进回收站了（编号 " + (r.data && r.data.id) + "，看记录列表已不再显示）" : "没删成"), r, !(r && r.ok));
+    });
+  };
+  document.getElementById("btnRestore").onclick = function () {
+    var id = inEditId.value.trim();
+    if (!id) { paint("【找回一条】没填编号", { ok: false, error: "bad_request", msg: "得先填要找回的是第几行" }, true); return; }
+    Api.restoreRecord({ id: id }, function (r) {
+      paint("【找回一条】" + (r && r.ok ? "找回来了（编号 " + (r.data && r.data.id) + "，看记录列表又出现了）" : "没找回成"), r, !(r && r.ok));
+    });
+  };
 
   /* 打开这一页就自己先去云里取一次（先取「今日计划」），省得还要先找按钮。
      想直接看别的：地址末尾加 #rec = 学习记录，#err = 故意看错误 */

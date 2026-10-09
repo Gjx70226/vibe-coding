@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS checkins (
   wrong_count   INTEGER        NOT NULL DEFAULT 0,
   status       TEXT            NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'mastered')),
   mode         TEXT            NOT NULL DEFAULT 'new'      CHECK (mode IN ('new', 'wrong', 'daily')),
+  is_deleted   INTEGER         NOT NULL DEFAULT 0,
   created_at   TIMESTAMPTZ     NOT NULL DEFAULT now()
 );
 
