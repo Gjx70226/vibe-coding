@@ -2,10 +2,22 @@
    数据访问层（Day 19 板块②）：checkins 这张表的所有查询/写入，全收在这里。
    接口文件 api.js 只调下面这几个函数，不再自己写 from/select/insert/update。
    回调形态和云那边一模一样：cb({error, data, count})。
-   今天只搬家，不加功能、不改字段（契约不许动）。
+   Day 19 只搬家，不加功能、不改字段（契约不许动）。
+   Day 23 改了啥：所有「问云没成」的分支统一归到「网络/接口错」这一类，
+     只回统一中文「数据暂时拿不到，请稍后再试」，原始报错只打到控制台（console.error），
+     绝不把英文原话甩给用户（三类错误模型见 api.js 的 readCloudErr）。
    ============================================================ */
 (function (global) {
   "use strict";
+
+  /* 网络/接口这一类错的统一长相：只回人话，原话留给控制台 */
+  function netErr() {
+    return { error: { code: "network", message: "数据暂时拿不到，请稍后再试" } };
+  }
+  /* 原始报错只进控制台，方便出问题时查，但不给用户看（防裸报错） */
+  function logErr(tag, e) {
+    if (global.console && global.console.error) global.console.error("[云] " + tag, e || "");
+  }
 
   /* 取学习记录列表（带哪天 / 从第几条 / 要几条三个条件） */
   function list(client, opt, cb) {
@@ -28,15 +40,18 @@
     try {
       q = b.range(offset, offset + limit - 1);
     } catch (e0) {
-      cb({ error: { message: "问云的话没发出去" } });
+      logErr("取列表·请求没发出去", e0);
+      cb(netErr());
       return;
     }
     if (!q || typeof q.then !== "function") {
-      cb({ error: { message: "云的小工具没接上" } });
+      logErr("取列表·云小工具没接上");
+      cb(netErr());
       return;
     }
-    q.then(function (out) { cb(out || {}); })["catch"](function () {
-      cb({ error: { message: "问云的时候断气了（多半是断网）" } });
+    q.then(function (out) { cb(out || {}); })["catch"](function (e) {
+      logErr("取列表·网络或接口错", e);
+      cb(netErr());
     });
   }
 
@@ -50,15 +65,18 @@
         .eq("word", word)
         .maybeSingle();
     } catch (e0) {
-      cb({ error: { message: "问云的话没发出去" } });
+      logErr("查重·请求没发出去", e0);
+      cb(netErr());
       return;
     }
     if (!q || typeof q.then !== "function") {
-      cb({ error: { message: "云的小工具没接上" } });
+      logErr("查重·云小工具没接上");
+      cb(netErr());
       return;
     }
-    q.then(function (out) { cb(out || {}); })["catch"](function () {
-      cb({ error: { message: "问云的时候断气了（多半是断网）" } });
+    q.then(function (out) { cb(out || {}); })["catch"](function (e) {
+      logErr("查重·网络或接口错", e);
+      cb(netErr());
     });
   }
 
@@ -72,15 +90,18 @@
         .select("id,correct_count,wrong_count")
         .maybeSingle();
     } catch (e0) {
-      cb({ error: { message: "改次数的话没发出去" } });
+      logErr("加次数·请求没发出去", e0);
+      cb(netErr());
       return;
     }
     if (!q || typeof q.then !== "function") {
-      cb({ error: { message: "云的小工具没接上" } });
+      logErr("加次数·云小工具没接上");
+      cb(netErr());
       return;
     }
-    q.then(function (out) { cb(out || {}); })["catch"](function () {
-      cb({ error: { message: "改次数的时候断气了（多半是断网）" } });
+    q.then(function (out) { cb(out || {}); })["catch"](function (e) {
+      logErr("加次数·网络或接口错", e);
+      cb(netErr());
     });
   }
 
@@ -93,15 +114,18 @@
         .select("id,correct_count,wrong_count")
         .single();
     } catch (e0) {
-      cb({ error: { message: "写的话没发出去" } });
+      logErr("写·请求没发出去", e0);
+      cb(netErr());
       return;
     }
     if (!q || typeof q.then !== "function") {
-      cb({ error: { message: "云的小工具没接上" } });
+      logErr("写·云小工具没接上");
+      cb(netErr());
       return;
     }
-    q.then(function (out) { cb(out || {}); })["catch"](function () {
-      cb({ error: { message: "写的时候断气了（多半是断网）" } });
+    q.then(function (out) { cb(out || {}); })["catch"](function (e) {
+      logErr("写·网络或接口错", e);
+      cb(netErr());
     });
   }
 
@@ -114,15 +138,18 @@
         .eq("id", id)
         .maybeSingle();
     } catch (e0) {
-      cb({ error: { message: "问云的话没发出去" } });
+      logErr("取单行·请求没发出去", e0);
+      cb(netErr());
       return;
     }
     if (!q || typeof q.then !== "function") {
-      cb({ error: { message: "云的小工具没接上" } });
+      logErr("取单行·云小工具没接上");
+      cb(netErr());
       return;
     }
-    q.then(function (out) { cb(out || {}); })["catch"](function () {
-      cb({ error: { message: "问云的时候断气了（多半是断网）" } });
+    q.then(function (out) { cb(out || {}); })["catch"](function (e) {
+      logErr("取单行·网络或接口错", e);
+      cb(netErr());
     });
   }
 
@@ -136,15 +163,18 @@
         .select("id,status")
         .maybeSingle();
     } catch (e0) {
-      cb({ error: { message: "改的话没发出去" } });
+      logErr("改·请求没发出去", e0);
+      cb(netErr());
       return;
     }
     if (!q || typeof q.then !== "function") {
-      cb({ error: { message: "云的小工具没接上" } });
+      logErr("改·云小工具没接上");
+      cb(netErr());
       return;
     }
-    q.then(function (out) { cb(out || {}); })["catch"](function () {
-      cb({ error: { message: "改的时候断气了（多半是断网）" } });
+    q.then(function (out) { cb(out || {}); })["catch"](function (e) {
+      logErr("改·网络或接口错", e);
+      cb(netErr());
     });
   }
 
@@ -158,15 +188,18 @@
         .select("id")
         .maybeSingle();
     } catch (e0) {
-      cb({ error: { message: "删的话没发出去" } });
+      logErr("删·请求没发出去", e0);
+      cb(netErr());
       return;
     }
     if (!q || typeof q.then !== "function") {
-      cb({ error: { message: "云的小工具没接上" } });
+      logErr("删·云小工具没接上");
+      cb(netErr());
       return;
     }
-    q.then(function (out) { cb(out || {}); })["catch"](function () {
-      cb({ error: { message: "删的时候断气了（多半是断网）" } });
+    q.then(function (out) { cb(out || {}); })["catch"](function (e) {
+      logErr("删·网络或接口错", e);
+      cb(netErr());
     });
   }
 
@@ -180,15 +213,18 @@
         .select("id")
         .maybeSingle();
     } catch (e0) {
-      cb({ error: { message: "找回的话没发出去" } });
+      logErr("找回·请求没发出去", e0);
+      cb(netErr());
       return;
     }
     if (!q || typeof q.then !== "function") {
-      cb({ error: { message: "云的小工具没接上" } });
+      logErr("找回·云小工具没接上");
+      cb(netErr());
       return;
     }
-    q.then(function (out) { cb(out || {}); })["catch"](function () {
-      cb({ error: { message: "找回的时候断气了（多半是断网）" } });
+    q.then(function (out) { cb(out || {}); })["catch"](function (e) {
+      logErr("找回·网络或接口错", e);
+      cb(netErr());
     });
   }
 

@@ -1,0 +1,40 @@
+============================================================
+Day 23｜密钥搜查证据（红线优先，先做）
+时间：2026-10-09（北京时间）
+范围：当前代码树  +  全部 Git 提交历史
+============================================================
+
+【一、代码树里的密钥特征词搜索】
+命令：grep -rinE "password|secret|sk-|postgres://|postgresql://|mongodb://|mysql://|api_key|apikey|Bearer|Authorization|wbpk_|wbapp_|AKIA|BEGIN RSA|BEGIN PRIVATE|token" .
+命中（均为公开钥匙或非密钥，不是泄漏）：
+  - api.js:17                publishableKey: "wbpk_..."   ← 公开钥匙（publishable key）
+  - cloud.js:19              publishableKey: "wbpk_..."   ← 同上
+  - tools/verify_*.js 等     publishableKey: "wbpk_..."   ← 验证脚本复用公开钥匙
+  - tools/push_to_github.py  读 GITHUB_TOKEN（从 .env/环境变量读，真值不写死代码）
+  - day17/18-review 笔记     提及 wbpk_（复盘记录，非代码）
+→ 真实密钥（数据库密码 / API secret / 连接串 / 私钥 / 令牌值）：0 命中
+
+【二、Git 全部历史「真·密钥值」扫描】
+命令：git log -p --all | grep -inE "ghp_[A-Za-z0-9]+|github_pat_...|sk-[A-Za-z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|AKIA[0-9A-Z]{16}|postgres(ql)?://[a-z]+:|mongodb(\+srv)?://[a-z]+:|mysql://[a-z]+:|-----BEGIN (RSA |EC |OPENSSH |DSA |PRIVATE)|xox[baprs]-...|eyJ...\.eyJ"
+结果：0 命中（无输出）
+
+【三、wbpk_ 公开钥匙在哪些提交出现过（它本来就公开，列出来说明不是秘密）】
+git log --oneline --all -S "wbpk_" ：
+  c516e18 Day 22｜PATCH/DELETE 上线+软删除回收站
+  7802267 Day 21｜第三周验收
+  7858feb Day 18｜写入接口 addRecord
+  d8ea060 Day 17｜第一个读接口真从云里取数
+  8652f7f Day 16｜补上证据链
+  9c91856 Day 15｜开通云端链路
+（均为 publishable key，设计上可公开，非泄漏）
+
+【四、.env 是否进过 Git】
+git log --all --oneline -- .env ：无输出 → .env 从未被提交
+
+【五、.env 是否被忽略（提交不出去）】
+git check-ignore .env  →  输出 ".env"  （已被忽略）
+git check-ignore .env.example  →  无输出  （可被提交）
+
+【结论】真实密钥 0 命中；仓库无泄漏；唯一保密的 GITHUB_TOKEN 早已走 .env/环境变量，
+且被 .gitignore 挡住，从未进 Git。
+============================================================

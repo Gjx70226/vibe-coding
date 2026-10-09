@@ -54,8 +54,21 @@
     return { ok: false, error: code, msg: msg };
   }
 
-  /* 云端回的英文原话 → 人话。认代号，认不出就把云端原话原样带出来，不编 */
+  /* 三类错误模型（Day 23 明确边界，对应任务的三类提示）：
+       1) 用户输入错  → error = bad_request / not_found / conflict
+                       给能看懂的「改什么」提示；不联网，在接口校验阶段就拦住
+       2) 网络/接口错 → error = network
+                       统一回「数据暂时拿不到，请稍后再试」（断网、接口超时、SDK 没接上都算）
+       3) 服务端错    → error = server
+                       统一回「服务器开小差了，已记录，请稍后再试」，
+                       原始英文只打到控制台（console.error），绝不甩给用户看
+     本函数只负责「云端回的英文 → 上面二、三类之一」；第 1 类在接口里当场拦，不经过这里。 */
   function readCloudErr(err) {
+    /* 数据访问层（checkinsRepository / planDaysRepository）已经把断网这类归成 network 了 */
+    if (err && err.code === "network") {
+      return fail("network", (err.message || "数据暂时拿不到，请稍后再试"));
+    }
+
     var code = (err && err.code) || "";
     var raw = (err && (err.message || err.details || err.hint)) || "云端没说为啥";
     var low = (code + " " + raw).toLowerCase();
@@ -69,8 +82,14 @@
     /* 23503：插的那行的「哪天」在计划表里根本不存在（外键约束没过） */
     if (code === "23503") return fail("bad_request", "填的那个「哪天」在每日计划表里没有这一行（plan_day_id 得是计划表里真存在的一行号）");
     if (code === "23505") return fail("conflict", "同一天记了两条，撞上了");
-    if (code === "22P02" || code === "42883") return fail("bad_request", "传的东西类型不对：" + raw);
-    return fail("server", raw);
+    /* 22P02 / 42883：类型不对（比如该填数字填成了字）。告诉用户「改什么」，但不把英文原话甩出去 */
+    if (code === "22P02" || code === "42883") {
+      if (global.console && global.console.error) global.console.error("[云端原始报错]", raw);
+      return fail("bad_request", "传的东西类型不对（数字填成了文字，或格式不对）");
+    }
+    /* 兜底：认不出的云端错误，归「服务端错」——只回通用人话，原话留控制台 */
+    if (global.console && global.console.error) global.console.error("[云端原始报错]", raw);
+    return fail("server", "服务器开小差了，已记录，请稍后再试");
   }
 
   /* ---- 余力加练（A 方案）：留痕 ----------------------------------------

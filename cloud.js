@@ -21,6 +21,11 @@
 
   var client = null;
 
+  /* 原始报错只进控制台，不甩给用户看（Day 23：防裸报错） */
+  function logErr(tag, e) {
+    if (global.console && global.console.error) global.console.error("[云探测] " + tag, e || "");
+  }
+
   function getClient() {
     if (client) return client;
     if (typeof global.WorkBuddyCloud === "undefined") return null;
@@ -56,7 +61,8 @@
       try {
         q = c.database.from("health_probe").select("id").limit(1);
       } catch (e0) {
-        settle({ ok: false, kind: "error", msg: (e0 && e0.message) || "问的话没发出去" });
+        logErr("探测·请求没发出去", e0);
+        settle({ ok: false, kind: "network", msg: "数据暂时拿不到，请稍后再试" });
         return;
       }
       if (!q || typeof q.then !== "function") {
@@ -78,7 +84,8 @@
           } else if (code === "23505") {
             settle({ ok: true, kind: "ok", msg: "云通了" });
           } else {
-            settle({ ok: false, kind: "cloud", msg: err.message || "云端回了句不行" });
+            logErr("探测·云端原话", err);
+            settle({ ok: false, kind: "cloud", msg: "云端回了句不认识的错，请稍后再试" });
           }
         } else {
           settle({ ok: true, kind: "ok", msg: "云通了，数据库有数据" });
