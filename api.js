@@ -87,6 +87,17 @@
       if (global.console && global.console.error) global.console.error("[云端原始报错]", raw);
       return fail("bad_request", "传的东西类型不对（数字填成了文字，或格式不对）");
     }
+    /* 网络/接口层失败：接口连不上（断网、端点不可达、超时）时，云工具是「resolve 回一个带 error 的
+       对象」而不是 reject——err.code 为空、message 是浏览器原话（TypeError: Failed to fetch 等）。
+       这一条必须在「兜底归服务端」之前认出来，否则会被误判成服务器 bug，吓用户。
+       认法：code 为空（非数据库错误码）且 message 像网络层失败 → 归「网络/接口错」。 */
+    if (!code) {
+      var netRe = /failed to fetch|typeerror|network|timeout|超时|连接|网络|enotfound|econnrefused|aborted|getaddrinfo|dns/i;
+      if (netRe.test(raw)) {
+        if (global.console && global.console.error) global.console.error("[云端原始报错]", raw);
+        return fail("network", "数据暂时拿不到，请稍后再试");
+      }
+    }
     /* 兜底：认不出的云端错误，归「服务端错」——只回通用人话，原话留控制台 */
     if (global.console && global.console.error) global.console.error("[云端原始报错]", raw);
     return fail("server", "服务器开小差了，已记录，请稍后再试");

@@ -77,6 +77,13 @@
           // 云端给的是 42P01，但 PostgREST 有时只回一句话不给编号，所以按话认。
           var low = ((err.message || "") + " " + (err.details || "") + " " + code).toLowerCase();
           var tableMissing = code === "42P01" || low.indexOf("does not exist") >= 0 || low.indexOf("schema cache") >= 0;
+          /* 接口连不上（断网/端点不可达）：err.code 为空、message 是浏览器原话
+             （TypeError: Failed to fetch 等）——归「网络/接口错」，不当服务端 bug 吓人 */
+          var netRe = /failed to fetch|typeerror|network|timeout|超时|连接|网络|enotfound|econnrefused|aborted|getaddrinfo|dns/i;
+          if (netRe.test(low)) {
+            settle({ ok: false, kind: "network", msg: "数据暂时拿不到，请稍后再试" });
+            return;
+          }
           if (tableMissing) {
             settle({ ok: true, kind: "ok", msg: "云通了（探测表还没建，Day 16 建表后就能存东西）" });
           } else if (code === "42501" || err.kind === "permission") {
