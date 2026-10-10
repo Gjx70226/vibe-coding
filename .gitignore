@@ -6,4 +6,5 @@
 Thumbs.db
 
 # 我自己的临时截图/临时目录，永远不进 Git
-_tmp_*
+_tmp_*/
+_edge_profile/

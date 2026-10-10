@@ -248,13 +248,22 @@
     }
     (function bindPeek() {
       var timer = null;
-      function start() { clearTimeout(timer); timer = setTimeout(showPeek, PEEK_MS); }
+      function start(e) {
+        /* 按住题干不是要选文字：把系统默认行为（选中文字/长按菜单）当场按下去。
+           pointer 事件默认非 passive，preventDefault 真的拦得住 ——
+           旧写法 touchstart:{passive:true} 是"只听不拦"，系统想弹菜单照样弹。 */
+        if (e && e.cancelable) e.preventDefault();
+        clearTimeout(timer);
+        timer = setTimeout(showPeek, PEEK_MS);
+      }
       function stop() { clearTimeout(timer); }
-      wordEl.addEventListener("mousedown", start);
-      wordEl.addEventListener("touchstart", start, { passive: true });
-      ["mouseup", "mouseleave", "touchend", "touchmove", "scroll"].forEach(function (ev) {
-        wordEl.addEventListener(ev, stop);
-      });
+      /* 只认「按下」和「真正松手/系统取消」。旧写法把 touchmove、mouseleave、scroll
+         也绑成"立即取消"——真实手指按下必微抖（touchmove）、鼠标按住稍一滑出题干
+         （mouseleave），计时器就被清掉，长按永远出不来。这就是手机必失败、
+         电脑上"有时候按了没反应"的根因（Day 24 修的就是它）。 */
+      wordEl.addEventListener("pointerdown", start);
+      wordEl.addEventListener("pointerup", stop);
+      wordEl.addEventListener("pointercancel", stop);
       wordEl.addEventListener("contextmenu", function (e) { e.preventDefault(); }); // 手机别弹系统菜单
       peekEl.addEventListener("click", hidePeek);
     })();
