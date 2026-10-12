@@ -1,0 +1,14 @@
+=== verify-project 发布前检查报告 ===
+时间：2026-10-12T08-25-50
+[PASS] C1 版本闸门 — APP_VER=20261011e；改动静态资源=components.js,quiz.js,style.css；全部一致
+[PASS] C2 语法闸门 — 根目录 15 个 .js 全部 node --check 通过
+[FAIL] C3 公网可达+版本生效 — 首页含真实词「important」=false；components.js?v=20261011e 含 APP_VER=true
+[FAIL] C4 密钥/敏感信息扫描 — 源码命中真实密钥=2（.workbuddy\skills\verify-project\SKILL.md: - **故意弄坏演示**：临时往某 `.js` 塞 `var __leak = "sk-abcd1234efgh5678";` → 重跑必须 FAIL；删掉后重；day23-review\安全自查清单-Day23.md: - **怎么算通过**：对代码树和历史各跑一遍上述特征词搜索，只命中 `wbpk_`（公开）和字段名（如 `password=`、`token=` 这类代码自身）；入库.env=0（应0）；.env.example存在=true
+[FAIL] C5 Git安全/.gitignore — status 含禁入项=0（无）；.gitignore 覆盖规则=false
+[PASS] C6 关键交互回归(headless) — 长按+中文模式两脚本均退出0且含✅、零error（脚本内已seed已学词覆盖localStorage读写）
+[MANUAL] C7 手机真机长按 — 须 vivo 真机确认长按出释义；未确认不得宣称通过（桌面模拟不出真机手势）
+[NA] C8 健康接口 /api/health — N/A：纯前端无后端；接 WorkBuddy Cloud Service 后改为 curl /api/health 期望200+{ok:true}
+[NA] C9 读写接口各调一次 — N/A：localStorage 读写已由 C6 覆盖；云端读写接口待后端
+[NA] C10 数据库可连接/核心表 — N/A：待后端；接 Cloud Service 后检查核心表存在+一条SELECT成功
+
+结论：❌ 不可发布：C3公网可达+版本生效、C4密钥/敏感信息扫描、C5Git安全/.gitignore

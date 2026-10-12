@@ -625,6 +625,15 @@ body {
 .peek-status.ok { background: rgba(46, 204, 113, 0.14); color: var(--accent-green); }
 .peek-status.wait { background: rgba(255, 107, 94, 0.12); color: var(--accent-red); }
 
+/* 选项长按就地展开（2026-10-11d，百词斩式）：释义出现在被按的那个选项卡片自己格子里，
+   卡片加蓝边浅蓝底示意"正被查看"，松手恢复原样。 */
+.option-btn.peeking {
+  border-color: rgba(37, 99, 235, 0.45);
+  background: rgba(37, 99, 235, 0.08);
+}
+.option-btn.peeking b { display: block; font-size: 17px; margin-bottom: 2px; }
+.option-btn.peeking .peek-status { margin-left: 0; margin-top: 4px; }
+
 /* 强化反馈（backlog 第 8 条）：答完题给一块"英文 ＝ 中文"对照 + 累计对/错次数 */
 .word-pair {
   margin: -6px 0 12px;

@@ -68,6 +68,40 @@
   // 两个音在「音色」上就差得远（一个圆润一个刺耳），所以不用凑频率也能一耳朵分开。
   // 想换口味：改频率（越大越高）、改 wave 里的 "sine"/"square"（圆润／电子感）。
 
+  // ---------- 念单词（2026-10-11 小甘要的：跳到新词真念出来）----------
+  // 做法：浏览器自带语音合成（speechSynthesis），0 文件、不联网、不接后端。
+  // 声音开关 soundOn 一并管它；同样要先被点过屏幕才出声（浏览器规矩）。
+  var synth = window.speechSynthesis || null;
+  // 嗓音列表是异步加载的，先取一次，onvoiceschanged 时再刷新
+  var voices = [];
+  function loadVoices() { try { voices = (synth && synth.getVoices()) || []; } catch (e) { voices = []; } }
+  if (synth) {
+    loadVoices();
+    if (typeof synth.onvoiceschanged !== "undefined") synth.onvoiceschanged = loadVoices;
+  }
+  // 按语种精确挑嗓音：英文强制 en-US（小甘要美式，不能让浏览器挑成英式）
+  function pickVoice(lang) {
+    if (!voices.length) return null;
+    var pref = (lang || "en-US").replace("_", "-").toLowerCase();
+    var same = voices.filter(function (v) { return (v.lang || "").replace("_", "-").toLowerCase() === pref; });
+    if (same.length) return same[0];
+    var base = pref.split("-")[0];                     // 退一步：同语种里挑一个（en / zh）
+    var baseMatch = voices.filter(function (v) { return (v.lang || "").toLowerCase().indexOf(base) === 0; });
+    return baseMatch.length ? baseMatch[0] : null;
+  }
+  function speak(text, lang) {
+    if (!synth || !soundOn || !text) return;
+    try {
+      synth.cancel();                                  // 先把上一句没念完的掐掉，免得叠着念
+      var u = new SpeechSynthesisUtterance(String(text));
+      u.lang = lang || "en-US";
+      var v = pickVoice(lang);
+      if (v) u.voice = v;                              // 指定嗓音，强制美式/对应中文嗓音
+      u.rate = 0.95;                                   // 稍微慢一点，听得清
+      synth.speak(u);
+    } catch (e) {}
+  }
+
   // 英文 → 整条词 的查找表
   var wordMap = {};
   try {
@@ -198,7 +232,10 @@
         soundOn = !soundOn;
         Store.setSound(soundOn);
         paintSound();
-        if (soundOn) { unlock(); beepRight(); }   // 点开的时候先响一声，让人知道有这个音
+        if (soundOn) {                            // 点开的时候先响一声 + 念当前词，让人知道有这个音
+          unlock(); beepRight();
+          if (current) speak(kind === "en2zh" ? current.word : current.meaning, kind === "en2zh" ? "en-US" : "zh-CN");
+        }
       };
     }
     paintSound();
@@ -229,44 +266,81 @@
       }
     }
 
-    // ---------- 长按 peek（backlog ③）----------
-    function showPeek() {
-      if (!current) return;
-      var c = Store.getCount(current.word);
+    // ---------- 长按 peek（backlog ③，2026-10-11 扩展：题干+四个选项都能长按）----------
+    // 通用：给任意词弹「英文 ＝ 中文 + 掌握状态」。题干用 showPeek()，选项用 peekWord(选项词)。
+    function peekHTML(w, showMeaning) {
+      var c = Store.getCount(w.word);
       var mastered = c.correct > 0;
-      peekEl.classList.add("open");
-      peekEl.innerHTML =
-        "<b>" + current.word + "</b> " + (current.phonetic || "") +
-        '<span class="peek-arrow">＝</span>' + current.meaning +
+      // showMeaning=true 才显示「＝中文意思」。中文模式（zh2en）里题目本身就是中文，
+      // 长按再复述一遍中文纯属多余 —— 小甘 2026-10-11 要的：中文模式长按只给英文+音标+掌握状态。
+      return "<b>" + w.word + "</b> " + (w.phonetic || "") +
+        (showMeaning ? ('<span class="peek-arrow">＝</span>' + w.meaning) : "") +
         '<span class="peek-status ' + (mastered ? "ok" : "wait") + '">' +
         (mastered ? "已掌握" : "未掌握") + (c.wrong ? " · 错过 " + c.wrong + " 次" : "") +
         "</span>";
     }
+    function peekWord(w, showMeaning) {
+      if (!w || !w.word) return;
+      peekEl.classList.add("open");
+      peekEl.innerHTML = peekHTML(w, showMeaning);
+    }
+    function showPeek() { peekWord(current, kind === "en2zh"); }
     function hidePeek() {
       peekEl.classList.remove("open");
       peekEl.textContent = "长按题干，看另一半意思";
     }
-    (function bindPeek() {
+    // 长按通用绑定：给任意元素绑「按住满 500ms 弹该词释义」，双通道（桌面 pointer + 手机 touch 兜底）。
+    // el._longFired 用来区分「长按」和「点一下」——长按松手后不触发元素的 click（避免误选选项）。
+    // inPlace=true（百词斩式，2026-10-11d）：释义就地展开在按的那个元素自己格子里（选项卡片自己
+    // 变高显示英文+音标+中文），松手恢复原样——不往题干下面那个固定框里塞。
+    // inPlace=false（题干）：释义显示在题干正下方的 peek 框，那本来就是题干的"自己位置"。
+    function bindLongPress(el, getWord, inPlace) {
       var timer = null;
-      function start(e) {
-        /* 按住题干不是要选文字：把系统默认行为（选中文字/长按菜单）当场按下去。
-           pointer 事件默认非 passive，preventDefault 真的拦得住 ——
-           旧写法 touchstart:{passive:true} 是"只听不拦"，系统想弹菜单照样弹。 */
-        if (e && e.cancelable) e.preventDefault();
-        clearTimeout(timer);
-        timer = setTimeout(showPeek, PEEK_MS);
+      el._longFired = false;
+      function show() {
+        var w = getWord();
+        if (!w || !w.word) return;
+        el._longFired = true;
+        if (inPlace) {
+          if (!el._origHTML) el._origHTML = el.innerHTML;   // 先记住原样，松手好恢复
+          el.classList.add("peeking");
+          el.innerHTML = peekHTML(w, kind === "en2zh");   // 中文模式不显示「＝中文」
+        } else {
+          peekWord(w, kind === "en2zh");   // 题干长按下走固定框：英文模式照样显示「＝中文」
+        }
       }
-      function stop() { clearTimeout(timer); }
-      /* 只认「按下」和「真正松手/系统取消」。旧写法把 touchmove、mouseleave、scroll
-         也绑成"立即取消"——真实手指按下必微抖（touchmove）、鼠标按住稍一滑出题干
-         （mouseleave），计时器就被清掉，长按永远出不来。这就是手机必失败、
-         电脑上"有时候按了没反应"的根因（Day 24 修的就是它）。 */
-      wordEl.addEventListener("pointerdown", start);
-      wordEl.addEventListener("pointerup", stop);
-      wordEl.addEventListener("pointercancel", stop);
-      wordEl.addEventListener("contextmenu", function (e) { e.preventDefault(); }); // 手机别弹系统菜单
-      peekEl.addEventListener("click", hidePeek);
-    })();
+      function restore() {
+        if (inPlace && el._origHTML) {
+          el.innerHTML = el._origHTML;
+          el.classList.remove("peeking");
+        }
+      }
+      function start() {
+        el._longFired = false;
+        clearTimeout(timer);
+        timer = setTimeout(show, PEEK_MS);
+      }
+      function stop() { clearTimeout(timer); restore(); hidePeek(); }   // 松手立刻收起 —— 百词斩式"按住出、松手没"
+      /* 桌面 / 触控笔：pointer 事件。按住处别让浏览器选中文字。 */
+      el.addEventListener("pointerdown", function (e) {
+        if (e && e.cancelable) e.preventDefault();
+        start();
+      });
+      el.addEventListener("pointerup", stop);
+      el.addEventListener("contextmenu", function (e) { e.preventDefault(); }); // 右键菜单也拦掉
+      /* 手机兜底：touch 事件（安卓 WebView 对 pointer 支持不稳，touch 一定稳）。
+         关键：touchstart 用 passive:false 并 preventDefault —— 把系统「长按弹出菜单 /
+         选词」当场掐掉。否则 vivo 这类手机一长按就弹系统菜单，把我们的计时掐断或盖住，
+         释义永远出不来。 */
+      el.addEventListener("touchstart", function (e) {
+        if (e && e.cancelable) e.preventDefault();   // 必须同步、必须非 passive，才拦得住系统菜单
+        start();
+      }, { passive: false });
+      el.addEventListener("touchend", stop);
+      el.addEventListener("touchcancel", stop);
+    }
+    bindLongPress(wordEl, function () { return current; });   // 题干长按看释义
+    peekEl.addEventListener("click", hidePeek);
 
     // ---------- 渲染一题 ----------
     function render() {
@@ -276,6 +350,10 @@
       var w = queue[idx];
       var t = (typeof w === "object") ? w : (wordMap[w] || { word: w, meaning: "", phonetic: "" });
       current = t;
+
+      // 跳到新词：念出来（en2zh 念英文单词，zh2en 念中文释义）
+      if (kind === "en2zh") speak(t.word, "en-US");
+      else speak(t.meaning, "zh-CN");
 
       progressEl.textContent = "第 " + (idx + 1) + " / " + queue.length + " 词";
       wordEl.textContent = (kind === "en2zh") ? (t.word || "") : (t.meaning || "");
@@ -312,7 +390,14 @@
         // 以前这里一律按对象取 o.word，所以复习/每日那两页四个按钮全是 undefined。
         var plain = (kind === "zh2en");
         b.innerHTML = posBadge(plain ? o : o.word) + (plain ? o : o.meaning);
-        b.onclick = function () { choose(o, t, i); };
+        b.onclick = function () {
+          if (b._longFired) { b._longFired = false; return; }   // 刚长按过，松手不触发"选这个"
+          choose(o, t, i);
+        };
+        // 长按选项（百词斩式就地展开）：推出这一项对应的完整词（英文+音标+中文）显示在按钮自己格子里。zh2en 下选项是字符串，要去词库反查。
+        bindLongPress(b, function () {
+          return (kind === "zh2en") ? (wordMap[o] || { word: o, meaning: "", phonetic: "" }) : o;
+        }, true);
         optionsEl.appendChild(b);
       });
     }

@@ -7,4 +7,8 @@ Thumbs.db
 
 # 我自己的临时截图/临时目录，永远不进 Git
 _tmp_*/
-_edge_profile/
+_edge_profile*/
+
+# 依赖与日志
+node_modules/
+*.log
