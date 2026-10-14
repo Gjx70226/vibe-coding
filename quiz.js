@@ -300,7 +300,7 @@
       function show() {
         var w = getWord();
         if (!w || !w.word) return;
-        el._longFired = true;
+        el._longFired = true;   // 标记：刚长按过，松手那次点击由业务 onclick 拦掉
         if (inPlace) {
           if (!el._origHTML) el._origHTML = el.innerHTML;   // 先记住原样，松手好恢复
           el.classList.add("peeking");
@@ -320,24 +320,32 @@
         clearTimeout(timer);
         timer = setTimeout(show, PEEK_MS);
       }
-      function stop() { clearTimeout(timer); restore(); hidePeek(); }   // 松手立刻收起 —— 百词斩式"按住出、松手没"
-      /* 桌面 / 触控笔：pointer 事件。按住处别让浏览器选中文字。 */
+      function stop(e) {
+        clearTimeout(timer);
+        restore();
+        hidePeek();
+        // 长按成立时，松手拦掉误触的 click（真机 touchend.cancelable 为 true 时有效）；
+        // 即便没拦住，选项自身 onclick 里的 `if (el._longFired) return` 也会兜底，绝不误选。
+        // 注意：这里【不】清 el._longFired，交给 onclick 消费后清除，否则兜底失效
+        //（Day 27 真机/无头暴露的误选根因正是 stop 提前清掉了它）。
+        if (el._longFired && e && e.cancelable) e.preventDefault();
+      }
+      /* 桌面 / 触控笔：pointer 事件。按住处别让浏览器选中文字（桌面 preventDefault 不杀 click，电脑正常）。 */
       el.addEventListener("pointerdown", function (e) {
         if (e && e.cancelable) e.preventDefault();
         start();
       });
       el.addEventListener("pointerup", stop);
-      el.addEventListener("contextmenu", function (e) { e.preventDefault(); }); // 右键菜单也拦掉
       /* 手机兜底：touch 事件（安卓 WebView 对 pointer 支持不稳，touch 一定稳）。
-         关键：touchstart 用 passive:false 并 preventDefault —— 把系统「长按弹出菜单 /
-         选词」当场掐掉。否则 vivo 这类手机一长按就弹系统菜单，把我们的计时掐断或盖住，
-         释义永远出不来。 */
-      el.addEventListener("touchstart", function (e) {
-        if (e && e.cancelable) e.preventDefault();   // 必须同步、必须非 passive，才拦得住系统菜单
-        start();
-      }, { passive: false });
+         旧实现：touchstart 里同步 preventDefault —— 这句会让浏览器不再把轻点合成 click，
+         手机就点不了选项/下一词（正是 Day 27 真机暴露的致命卡点）。
+         新实现：touchstart 只计时、不拦；长按触发后才在 touchend 拦 click 防误触；
+         系统长按菜单统一由下方 contextmenu 拦截，绝不伤轻点。 */
+      el.addEventListener("touchstart", function () { start(); }, { passive: true });
       el.addEventListener("touchend", stop);
       el.addEventListener("touchcancel", stop);
+      /* 桌面右键 + 移动端长按系统菜单，统一在这拦，不影响轻点 click */
+      el.addEventListener("contextmenu", function (e) { e.preventDefault(); });
     }
     bindLongPress(wordEl, function () { return current; });   // 题干长按看释义
     peekEl.addEventListener("click", hidePeek);

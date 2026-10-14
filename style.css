@@ -236,6 +236,9 @@ body {
   padding: 16px 12px;
   cursor: pointer;
   transition: all 0.15s;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 .option-btn:hover:not(:disabled) { border-color: var(--accent-blue); }
 .option-btn:disabled { cursor: default; }

@@ -8,7 +8,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>四级备考助手</title>
-  <link rel="stylesheet" href="style.css?v=20261011e">
+  <link rel="stylesheet" href="style.css?v=20261013b">
 </head>
 <body>
   <!-- 背景光斑：纯装饰，让白底不单调 -->
@@ -33,9 +33,6 @@
     <!-- 路由把对应视图的 HTML 塞进这个盒子（四态之"成功/空"都走它） -->
     <div id="content" hidden></div>
 
-    <!-- 云端小格子：把「云连没连上」摆在明面上，点一下能重问（Day 15 板块②） -->
-    <div class="cloud-box" id="cloudBox" hidden></div>
-
     <!-- 出错状态：视图崩了/模拟失败时显示红条+重试（四态之"出错"） -->
     <div class="error-box" id="errorBox" hidden>
       <div class="err-icon">⚠️</div>
@@ -53,24 +50,21 @@
   <!-- 先引入词库与公共层，再引入四个视图，最后引入路由（顺序不能反）
        每个 ?v= 版本号是故意加的：文件名不变时浏览器会拿旧的那份，
        加了版本号浏览器就认为新的是"另一个文件"，必须重新下载 -->
-  <!-- 官方云的小工具（CDN 版，纯网页项目专用）；下面是咱们自己的云检查模块 -->
-  <script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"></script>
-  <script src="cloud.js?v=20261010a"></script>
-  <script src="components.js?v=20261011e"></script>
-  <script src="store.js?v=20261005b"></script>
-  <script src="words.js?v=20261005b"></script>
+  <script src="components.js?v=20261013b"></script>
+  <script src="store.js?v=20261013b"></script>
+  <script src="words.js?v=20261013b"></script>
   <!-- Day 19 板块②：数据访问层（查库全收这儿），接口 api.js 只调它们 -->
-  <script src="planDaysRepository.js?v=20261010a"></script>
-  <script src="checkinsRepository.js?v=20261010a"></script>
+  <script src="planDaysRepository.js?v=20261013b"></script>
+  <script src="checkinsRepository.js?v=20261013b"></script>
   <!-- Day 17 板块① 的两个读取接口（页面这里只装零件，还不用它；api.html 那一页才真的调） -->
-  <script src="api.js?v=20261010a"></script>
-  <script src="quiz.js?v=20261011e"></script>     <!-- 答题卡公共零件（学习/复习/每日三处共用） -->
-  <script src="app.js?v=20261005b"></script>      <!-- 首页视图 HomeView -->
-  <script src="study.js?v=20261005b"></script>    <!-- 学习视图 StudyView -->
-  <script src="review.js?v=20261005b"></script>   <!-- 复习视图 ReviewView -->
-  <script src="daily.js?v=20261005b"></script>    <!-- 每日复习视图 DailyView -->
-  <script src="list.js?v=20261005b"></script>     <!-- 词表统计视图 ListView -->
-  <script src="detail.js?v=20261005b"></script>   <!-- 详情视图 DetailView -->
-  <script src="router.js?v=20261005b"></script>   <!-- 最后启动路由 -->
+  <script src="api.js?v=20261013b"></script>
+  <script src="quiz.js?v=20261013b"></script>     <!-- 答题卡公共零件（学习/复习/每日三处共用） -->
+  <script src="app.js?v=20261013b"></script>      <!-- 首页视图 HomeView -->
+  <script src="study.js?v=20261013b"></script>    <!-- 学习视图 StudyView -->
+  <script src="review.js?v=20261013b"></script>   <!-- 复习视图 ReviewView -->
+  <script src="daily.js?v=20261013b"></script>    <!-- 每日复习视图 DailyView -->
+  <script src="list.js?v=20261013b"></script>     <!-- 词表统计视图 ListView -->
+  <script src="detail.js?v=20261013b"></script>   <!-- 详情视图 DetailView -->
+  <script src="router.js?v=20261013b"></script>   <!-- 最后启动路由 -->
 </body>
 </html>
